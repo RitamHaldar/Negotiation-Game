@@ -20,4 +20,5 @@ app.use(cors({
 app.use("/api/auth", authroute);
 app.use("/api/game", gameroute);
 app.use("/api/leaderboard", leaderboardroute);
+app.use(express.static("./Public"))
 export default app;
