@@ -41,18 +41,18 @@ const Loading = () => {
 
             <div className="relative z-10 flex flex-col items-center animate-fade-in-up">
                 
-                <div className="relative w-40 h-40 flex items-center justify-center mb-10 group">
+                <div className="relative w-32 h-32 sm:w-40 sm:h-40 flex items-center justify-center mb-8 sm:mb-10 group">
                     <div className="absolute inset-2 bg-[#0A111A]/80 rounded-full shadow-[inset_0_0_30px_rgba(0,0,0,0.9)] backdrop-blur-sm"></div>
                     
                     <div className="absolute inset-0 border-[3px] border-t-cyan-400 border-r-transparent border-b-transparent border-l-cyan-400/20 rounded-full animate-[spin_1.5s_linear_infinite] shadow-[0_0_20px_rgba(34,211,238,0.4)]"></div>
                     
-                    <div className="absolute inset-[12px] border-[2px] border-b-purple-500 border-t-transparent border-r-purple-500/20 border-l-transparent rounded-full animate-[spin_3s_linear_infinite_reverse] shadow-[0_0_15px_rgba(168,85,247,0.4)]"></div>
+                    <div className="absolute inset-[10px] sm:inset-[12px] border-[2px] border-b-purple-500 border-t-transparent border-r-purple-500/20 border-l-transparent rounded-full animate-[spin_3s_linear_infinite_reverse] shadow-[0_0_15px_rgba(168,85,247,0.4)]"></div>
                     
-                    <div className="absolute inset-[24px] border border-dashed border-slate-700 rounded-full animate-[spin_10s_linear_infinite]"></div>
+                    <div className="absolute inset-[20px] sm:inset-[24px] border border-dashed border-slate-700 rounded-full animate-[spin_10s_linear_infinite]"></div>
 
-                    <div className="relative z-20 w-14 h-14 bg-[#050B14] border border-cyan-500/40 rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(34,211,238,0.3)] group-hover:shadow-[0_0_50px_rgba(34,211,238,0.5)] transition-shadow duration-700">
+                    <div className="relative z-20 w-12 h-12 sm:w-14 sm:h-14 bg-[#050B14] border border-cyan-500/40 rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(34,211,238,0.3)] group-hover:shadow-[0_0_50px_rgba(34,211,238,0.5)] transition-shadow duration-700">
                         <div className="absolute inset-0 bg-cyan-400/10 rounded-2xl animate-pulse"></div>
-                        <Code2 className="w-6 h-6 text-cyan-400 animate-pulse drop-shadow-[0_0_8px_rgba(34,211,238,1)]" />
+                        <Code2 className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-400 animate-pulse drop-shadow-[0_0_8px_rgba(34,211,238,1)]" />
                     </div>
 
                     <div className="absolute -top-2 -left-2 w-4 h-4 border-t-2 border-l-2 border-slate-600"></div>
@@ -60,7 +60,7 @@ const Loading = () => {
                 </div>
 
                 <div className="text-center w-full max-w-sm px-6">
-                    <h2 className="text-white text-2xl md:text-3xl font-black tracking-[0.4em] uppercase mb-4 drop-shadow-[0_0_20px_rgba(255,255,255,0.2)] animate-glitch-slight">
+                    <h2 className="text-white text-xl sm:text-2xl md:text-3xl font-black tracking-[0.3em] sm:tracking-[0.4em] uppercase mb-4 drop-shadow-[0_0_20px_rgba(255,255,255,0.2)] animate-glitch-slight">
                         INITIALIZING
                     </h2>
                     
@@ -69,7 +69,7 @@ const Loading = () => {
                             <div className="absolute w-2 h-2 bg-cyan-400 rounded-full animate-ping"></div>
                             <div className="relative w-1.5 h-1.5 bg-cyan-300 rounded-full"></div>
                         </div>
-                        <span className="min-w-[220px] text-left">
+                        <span className="min-w-[180px] sm:min-w-[220px] text-left">
                             {loadingText}{dots}
                         </span>
                     </div>

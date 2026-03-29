@@ -23,7 +23,7 @@ export const useChat = () => {
                 dispatch(setGame(response.game));
                 dispatch(addMessage({
                     role: 'seller',
-                    message: `MY initial valuation for ${response.game.product} is set at ₹${response.game.startingPrice.toLocaleString()}. What is your opening counter-proposal?`,
+                    message: `Iss ${response.game.product} ki starting price ₹${response.game.startingPrice.toLocaleString()} hai. Aapka kya counter-proposal hai?`,
                     offerPrice: response.game.startingPrice
                 }));
             } else {

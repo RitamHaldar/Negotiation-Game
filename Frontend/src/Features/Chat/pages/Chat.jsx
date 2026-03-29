@@ -23,7 +23,10 @@ import { resetChat } from '../chat.slice';
 function speak(text, personality = "normal") {
   window.speechSynthesis.cancel();
 
-  const cleanText = text.replace(/[^a-zA-Z0-9\s.*+-/()!?₹]/g, '');
+  const cleanText = text
+    .replace(/\*/g, '')
+    .replace(/[^\u0900-\u097Fa-zA-Z0-9\s.,!?'"₹()+-/]/g, '')
+    .trim();
 
   const utterance = new SpeechSynthesisUtterance(cleanText);
   if (personality === "aggressive") {
@@ -38,7 +41,8 @@ function speak(text, personality = "normal") {
   }
 
   utterance.volume = 1;
-  window.speechSynthesis.speak(utterance);
+  window.speechSynthesis.speak(utterance)
+  utterance.lang = 'hi-IN';
 }
 
 export default function Chat() {
@@ -56,12 +60,17 @@ export default function Chat() {
   const [showGameOver, setShowGameOver] = useState(false);
   const [timeLeft, setTimeLeft] = useState(120);
   const [isTimeAttackMode, setIsTimeAttackMode] = useState(false);
-  const [isAIVoiceMuted, setIsAIVoiceMuted] = useState(false);
+  const [isAIVoiceMuted, setIsAIVoiceMuted] = useState(true);
+  const suggestions = [
+    "Gaming Laptop", "iPhone 15", "Mirrorless Camera",
+    "Electric Scooter", "Custom Keyboard", "iPad Air M2",
+    "Dyson Vacuum", "Sony Headphones"
+  ];
 
   const { handleLogout } = useAuth();
   const {
     gameId, product, startingPrice, targetPrice, currentPrice, userPrice,
-    round, patience, status, messages, isThinking, error, score, finalPrice,
+    round, patience, status, messages, isThinking, score, finalPrice,
     loading, maxRounds
   } = useSelector(state => state.chat);
 
@@ -248,20 +257,20 @@ export default function Chat() {
 
       <div className="relative z-10 flex flex-col h-screen">
 
-        <header className="flex-none flex items-center justify-between px-6 py-4 border-b border-slate-800/60 bg-[#060b13]/80 backdrop-blur-xl shrink-0 h-[76px]">
-          <div className="flex items-center gap-6">
+        <header className="flex-none flex items-center justify-between px-4 sm:px-6 py-4 border-b border-slate-800/60 bg-[#060b13]/80 backdrop-blur-xl shrink-0 h-[70px] sm:h-[76px]">
+          <div className="flex items-center gap-4 sm:gap-6">
             <button
               onClick={() => {
                 window.speechSynthesis.cancel();
                 if (status === 'active') handleEndGame(0);
                 setShowGameOver(true);
               }}
-              className="flex items-center gap-3 text-[10px] font-bold text-slate-400 hover:text-white tracking-[0.2em] uppercase transition-colors group"
+              className="flex items-center gap-2 sm:gap-3 text-[9px] sm:text-[10px] font-bold text-slate-400 hover:text-white tracking-[0.2em] uppercase transition-colors group"
             >
-              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Exit Arena
+              <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:-translate-x-1 transition-transform" /> <span className="hidden sm:inline">Exit Arena</span><span className="sm:hidden">Exit</span>
             </button>
-            <div className="text-sm font-black italic tracking-widest text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)] uppercase border-l border-slate-700 pl-6 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-              {product || 'Synaptic Uplink V4'}
+            <div className="text-[11px] sm:text-sm font-black italic tracking-widest text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)] uppercase border-l border-slate-700 pl-4 sm:pl-6 animate-fade-in-up truncate max-w-[120px] sm:max-w-none" style={{ animationDelay: '0.1s' }}>
+              {product || 'Neural Link'}
             </div>
           </div>
 
@@ -285,12 +294,12 @@ export default function Chat() {
             )}
           </div>
 
-          <div className="flex items-center gap-6 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+          <div className="flex items-center gap-4 sm:gap-6 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
             <div className="flex flex-col items-end">
-              <span className="text-[9px] text-slate-500 font-bold tracking-[0.2em] uppercase">AI Price</span>
-              <span className="text-cyan-400 font-black text-xl tracking-wider">₹{currentPrice.toLocaleString()}</span>
+              <span className="text-[8px] sm:text-[9px] text-slate-500 font-bold tracking-[0.2em] uppercase">AI Price</span>
+              <span className="text-cyan-400 font-black text-sm sm:text-xl tracking-wider">₹{currentPrice.toLocaleString()}</span>
             </div>
-            <div className={`border ${isThinking ? 'border-amber-500 bg-amber-950/20' : 'border-cyan-500/50 bg-cyan-900/40'} text-cyan-400 text-[10px] font-bold tracking-[0.2em] uppercase px-4 py-1.5 rounded relative overflow-hidden`}>
+            <div className={`hidden sm:block border ${isThinking ? 'border-amber-500 bg-amber-950/20' : 'border-cyan-500/50 bg-cyan-900/40'} text-cyan-400 text-[10px] font-bold tracking-[0.2em] uppercase px-4 py-1.5 rounded relative overflow-hidden`}>
               <div className={`absolute top-0 left-0 w-full h-full ${isThinking ? 'bg-amber-400/10 animate-pulse' : 'bg-cyan-400/20'}`}></div>
               {isThinking ? 'Thinking' : (status === 'active' ? 'Negotiating' : status.toUpperCase())}
             </div>
@@ -311,9 +320,9 @@ export default function Chat() {
           </div>
         </header>
 
-        <main className="flex-1 flex flex-col lg:flex-row gap-6 p-6 h-[calc(100vh-156px)] overflow-hidden">
+        <main className="flex-1 flex flex-col lg:flex-row gap-4 lg:gap-6 p-4 lg:p-6 overflow-hidden min-h-0">
 
-          <aside className="hidden lg:flex flex-col w-[320px] gap-6 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+          <aside className="hidden lg:flex flex-col w-64 xl:w-80 gap-4 lg:gap-6 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
 
             <div className="bg-[#0B111A] border border-slate-800 rounded-xl p-6 shadow-lg relative overflow-hidden shrink-0 group">
               <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-purple-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
@@ -346,8 +355,8 @@ export default function Chat() {
                 <button
                   onClick={handleToggleAIVoice}
                   className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all duration-300 group/voice ${isAIVoiceMuted
-                      ? 'border-slate-800/60 bg-slate-900/40 text-slate-500 hover:border-slate-700'
-                      : 'border-purple-500/40 bg-purple-500/5 text-purple-400 shadow-[0_0_20px_rgba(168,85,247,0.05)] hover:border-purple-500/60'
+                    ? 'border-slate-800/60 bg-slate-900/40 text-slate-500 hover:border-slate-700'
+                    : 'border-purple-500/40 bg-purple-500/5 text-purple-400 shadow-[0_0_20px_rgba(168,85,247,0.05)] hover:border-purple-500/60'
                     }`}
                 >
                   <div className="flex items-center gap-3">
@@ -375,19 +384,64 @@ export default function Chat() {
           </aside>
 
           <section className="flex-1 flex flex-col bg-transparent overflow-hidden relative">
+            <div className="lg:hidden flex items-center justify-between px-4 py-2 bg-[#0B111A]/60 backdrop-blur-md border-b border-slate-800/40 z-30 shrink-0">
+                <div className="flex items-center gap-3 flex-1">
+                    <div className="flex flex-col">
+                        <span className="text-[7px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">Patience</span>
+                        <span className="text-[10px] font-black text-purple-400 leading-none">{patience}%</span>
+                    </div>
+                    <div className="flex-1 h-1 bg-slate-900 rounded-full overflow-hidden max-w-[80px]">
+                        <div className="h-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.6)] transition-all duration-500" style={{ width: `${patience}%` }}></div>
+                    </div>
+                </div>
+                <div className="flex items-center gap-4">
+                    <button 
+                        onClick={handleToggleAIVoice}
+                        className={`p-1.5 rounded-lg border flex items-center justify-center transition-all ${isAIVoiceMuted ? 'bg-slate-800/40 border-slate-700/50 text-slate-500' : 'bg-purple-500/20 border-purple-500/40 text-purple-400 animate-pulse-slow'}`}
+                    >
+                        {isAIVoiceMuted ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+                    </button>
+                    <div className="flex flex-col items-end">
+                        <span className="text-[7px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">Target</span>
+                        <span className="text-green-500 font-black text-[10px] leading-none">₹{targetPrice.toLocaleString()}</span>
+                    </div>
+                </div>
+            </div>
 
-            <div className="flex-1 overflow-y-auto custom-scrollbar pr-4 py-4 flex flex-col relative w-full h-full pb-[150px]">
-
+            <div className="flex-1 overflow-y-auto custom-scrollbar px-3 sm:pr-4 py-4 flex flex-col relative w-full h-full">
               {messages.map((m, idx) => (
                 <div key={idx} className={`flex flex-col gap-1 mb-8 animate-fade-in-up ${m.role === 'user' ? 'items-end' : 'items-start'}`}>
-                  <div className={`${m.role === 'user' ? 'bg-[#0A1929]/80 border-r-[3px] border-cyan-400 rounded-l-xl rounded-tr-sm text-right' : 'bg-[#171124] border-l-[3px] border-purple-500 rounded-r-xl rounded-tl-sm text-left'} backdrop-blur-sm p-5 max-w-[85%] shadow-[0_4px_20px_rgba(0,0,0,0.08)] text-sm leading-relaxed relative xl:max-w-[70%] font-medium tracking-wide`}>
-                    <div className={`absolute top-0 ${m.role === 'user' ? 'right-[-3px] bg-cyan-300 shadow-[0_0_10px_rgba(34,211,238,1)]' : 'left-[-3px] bg-purple-400 shadow-[0_0_10px_rgba(168,85,247,1)]'} w-[3px] h-[60%]`}></div>
-                    <div className="mb-2 text-[10px] uppercase font-bold tracking-widest opacity-50">
-                      {m.role === 'user' ? 'You' : 'Seller'} {m.offerPrice ? `// ₹${m.offerPrice}` : ''}
+                  <div className={`group relative max-w-[90%] xl:max-w-[75%] transition-all duration-300 ${m.role === 'user' ? 'hover:-translate-x-1' : 'hover:translate-x-1'}`}>
+                    
+                    <div className={`absolute -inset-[1px] bg-gradient-to-r ${m.role === 'user' ? 'from-cyan-500/0 via-cyan-500/20 to-cyan-500/40' : 'from-purple-500/40 via-purple-500/20 to-purple-500/0'} rounded-2xl blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
+
+                    <div className={`relative backdrop-blur-xl p-5 border shadow-2xl ${m.role === 'user' ? 'bg-cyan-950/20 border-cyan-500/20 rounded-2xl rounded-tr-sm select-none' : 'bg-purple-950/20 border-purple-500/20 rounded-2xl rounded-tl-sm'}`}>
+                      
+                      <div className={`absolute top-0 bottom-0 w-1 ${m.role === 'user' ? 'right-0 bg-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.8)]' : 'left-0 bg-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.8)] opacity-70'}`}></div>
+
+                      <div className="flex items-center justify-between mb-3 gap-8">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${m.role === 'user' ? 'bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.6)]' : 'bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.6)]'}`}></div>
+                          <span className={`text-[9px] font-black uppercase tracking-[0.3em] ${m.role === 'user' ? 'text-cyan-400' : 'text-purple-400'}`}>
+                            {m.role === 'user' ? 'You // Sector_Command' : 'AI // Aggressive_Core'}
+                          </span>
+                        </div>
+                        <span className="text-[8px] font-bold text-slate-600 uppercase tracking-widest font-mono">SEQ-{String(idx + 1).padStart(2, '0')}</span>
+                      </div>
+
+                      <div className={`text-[13px] leading-relaxed tracking-wide font-medium ${m.role === 'user' ? 'text-cyan-50' : 'text-slate-300'}`}>
+                        {m.message}
+                      </div>
+
+                      {m.offerPrice && (
+                        <div className={`mt-4 pt-3 border-t border-slate-800/40 flex items-center justify-between`}>
+                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Tactical Bid</span>
+                          <div className={`px-3 py-1 rounded-md text-[11px] font-black tracking-widest ${m.role === 'user' ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' : 'bg-purple-500/10 text-purple-400 border border-purple-500/20'}`}>
+                            ₹{m.offerPrice.toLocaleString()}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <span className={m.role === 'user' ? 'text-cyan-50' : 'text-slate-300'}>
-                      {m.message}
-                    </span>
                   </div>
                 </div>
               ))}
@@ -414,10 +468,10 @@ export default function Chat() {
               )}
             </div>
 
-            <div className="absolute bottom-6 left-6 right-6 lg:left-0 lg:right-0 mt-auto animate-fade-in-up z-20" style={{ animationDelay: '1.2s' }}>
-              <div className="bg-[#0E1522]/95 backdrop-blur-xl border border-slate-800 rounded-2xl p-4 shadow-[0_10px_40px_rgba(0,0,0,0.8)]">
-                <div className="flex flex-col gap-3">
-                  <div className="flex gap-3">
+            <div className="mt-auto animate-fade-in-up z-20 pt-2 sm:pt-4" style={{ animationDelay: '1.2s' }}>
+              <div className="bg-[#0E1522]/95 backdrop-blur-xl border border-slate-800 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-[0_10px_40px_rgba(0,0,0,0.8)]">
+                <div className="flex flex-col gap-2 sm:gap-3">
+                  <div className="flex flex-col lg:flex-row lg:flex-nowrap gap-2 sm:gap-3">
                     <div className="flex-1 flex h-14 shadow-inner rounded-lg overflow-hidden border border-slate-800 focus-within:border-cyan-500/50 transition-colors">
                       <input
                         type="text"
@@ -425,13 +479,13 @@ export default function Chat() {
                         value={inputMessage}
                         onChange={(e) => setInputMessage(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && onSendOffer()}
-                        placeholder={status === 'active' ? "TYPE YOUR TACTICAL MESSAGE..." : "NEGOTIATION CONCLUDED"}
-                        className="flex-1 bg-[#050A11] px-6 outline-none text-white text-[13px] tracking-[0.1em] placeholder:text-slate-600 font-mono disabled:opacity-50"
+                        placeholder={status === 'active' ? (window.innerWidth < 640 ? "MESSAGE..." : "TYPE YOUR TACTICAL MESSAGE...") : "NEGOTIATION CONCLUDED"}
+                        className="flex-1 bg-[#050A11] px-4 sm:px-6 outline-none text-white text-[12px] sm:text-[13px] tracking-[0.1em] placeholder:text-slate-600 font-mono disabled:opacity-50 min-w-0"
                       />
                       <button
                         onClick={toggleListening}
                         disabled={status !== 'active' || isThinking}
-                        className={`px-4 bg-[#0a0f18] border-l border-slate-800 transition-colors ${isListening ? 'text-red-500' : 'text-slate-500 hover:text-cyan-400'} disabled:opacity-50`}
+                        className={`px-3 sm:px-4 bg-[#0a0f18] border-l border-slate-800 transition-colors ${isListening ? 'text-red-500' : 'text-slate-500 hover:text-cyan-400'} disabled:opacity-50`}
                       >
                         {isListening ? (
                           <MicOff className="w-5 h-5 animate-pulse" />
@@ -440,33 +494,35 @@ export default function Chat() {
                         )}
                       </button>
                     </div>
-                    <div className="w-[180px] flex h-14 shadow-inner rounded-lg overflow-hidden border border-slate-800 focus-within:border-cyan-500/50 transition-colors">
-                      <div className="flex items-center px-4 bg-[#0a0f18] text-slate-500 text-xs font-mono font-bold border-r border-slate-800">₹</div>
-                      <input
-                        type="number"
-                        disabled={status !== 'active' || isThinking}
-                        value={inputOffer}
-                        onChange={(e) => setInputOffer(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && onSendOffer()}
-                        placeholder="OFFER..."
-                        className="flex-1 bg-[#050A11] px-4 outline-none text-white text-[13px] tracking-[0.1em] placeholder:text-slate-600 font-mono disabled:opacity-50"
-                      />
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 lg:w-[260px]">
+                        <div className="flex-1 flex h-14 shadow-inner rounded-lg overflow-hidden border border-slate-800 focus-within:border-cyan-500/50 transition-colors">
+                        <div className="flex items-center px-3 sm:px-4 bg-[#0a0f18] text-slate-500 text-[10px] sm:text-xs font-mono font-bold border-r border-slate-800">₹</div>
+                        <input
+                            type="number"
+                            disabled={status !== 'active' || isThinking}
+                            value={inputOffer}
+                            onChange={(e) => setInputOffer(e.target.value)}
+                            onKeyPress={(e) => e.key === 'Enter' && onSendOffer()}
+                            placeholder="OFFER..."
+                            className="flex-1 bg-[#050A11] px-3 sm:px-4 outline-none text-white text-[12px] sm:text-[13px] tracking-[0.1em] placeholder:text-slate-600 font-mono disabled:opacity-50 min-w-0"
+                        />
+                        </div>
+                        <button
+                        onClick={onSendOffer}
+                        disabled={!inputOffer || isThinking || status !== 'active'}
+                        className={`w-full sm:w-[80px] h-14 bg-cyan-400 hover:bg-cyan-300 text-[#060B13] flex justify-center items-center transition-all group overflow-hidden relative shrink-0 ${(!inputOffer || isThinking || status !== 'active') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                        <div className="absolute inset-0 bg-white/20 -translate-x-[120%] skew-x-[-20deg] group-hover:animate-[slide_0.6s_ease-out]"></div>
+                        <SendHorizontal className="w-5 h-5 sm:w-6 sm:h-6 group-hover:translate-x-1 group-active:scale-90 transition-transform relative z-10" />
+                        </button>
                     </div>
-                    <button
-                      onClick={onSendOffer}
-                      disabled={!inputOffer || isThinking || status !== 'active'}
-                      className={`w-[80px] bg-cyan-400 hover:bg-cyan-300 text-[#060B13] flex justify-center items-center transition-all group overflow-hidden relative ${(!inputOffer || isThinking || status !== 'active') ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    >
-                      <div className="absolute inset-0 bg-white/20 -translate-x-[120%] skew-x-[-20deg] group-hover:animate-[slide_0.6s_ease-out]"></div>
-                      <SendHorizontal className="w-6 h-6 group-hover:translate-x-1 group-active:scale-90 transition-transform relative z-10" />
-                    </button>
                   </div>
                 </div>
               </div>
             </div>
           </section>
 
-          <aside className="hidden xl:flex flex-col w-[320px] gap-6 animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
+          <aside className="hidden xl:flex flex-col w-72 h-full gap-4 lg:gap-6 animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
 
             <div className="bg-[#0B111A] border border-slate-800 rounded-xl p-6 flex-1 flex flex-col relative shadow-lg min-h-[400px]">
               <h3 className="text-[10px] font-bold text-slate-400 tracking-[0.2em] uppercase text-center mb-6">Price Dynamics</h3>
@@ -502,25 +558,24 @@ export default function Chat() {
 
         </main>
 
-        <nav className="flex-none h-[80px] bg-[#060b13] border-t border-slate-800 flex justify-center items-stretch gap-8 md:gap-24 px-6 z-30 shrink-0">
-
+        <nav className="flex-none h-[72px] lg:h-[80px] bg-[#060b13] border-t border-slate-800 flex justify-around sm:justify-center items-stretch gap-2 sm:gap-16 lg:gap-24 px-4 sm:px-6 z-30 shrink-0">
           <button
             onClick={onGetSuggestion}
             disabled={status !== 'active' || isThinking}
-            className="group relative flex flex-col items-center justify-center gap-1.5 px-8 min-w-[120px] transition-all disabled:opacity-30"
+            className="group relative flex flex-col items-center justify-center gap-1 px-3 sm:px-8 min-w-[70px] sm:min-w-[120px] transition-all disabled:opacity-30"
           >
-            <HelpCircle className="w-6 h-6 text-purple-400 relative z-10 group-hover:-translate-y-0.5 transition-transform" />
-            <span className="text-[9px] font-bold tracking-[0.2em] text-purple-400 uppercase relative z-10">AI Hint</span>
+            <HelpCircle className="w-5 h-5 lg:w-6 lg:h-6 text-purple-400 relative z-10 group-hover:-translate-y-0.5 transition-transform" />
+            <span className="text-[8px] lg:text-[9px] font-bold tracking-[0.2em] text-purple-400 uppercase relative z-10">AI Hint</span>
           </button>
 
           <button
             onClick={onSettle}
             disabled={status !== 'active' || isThinking || round < 2}
-            className="relative group flex flex-col items-center justify-center gap-1.5 px-8 min-w-[120px] transition-all disabled:opacity-30"
+            className="relative group flex flex-col items-center justify-center gap-1 px-3 sm:px-8 min-w-[70px] sm:min-w-[120px] transition-all disabled:opacity-30"
           >
-            {status === 'active' && !isThinking && round >= 2 && <div className="absolute top-[-1px] inset-x-0 h-[3px] bg-green-500 shadow-[0_0_12px_rgba(34,197,94,1)]"></div>}
-            <Banknote className="w-6 h-6 text-green-500 relative z-10" />
-            <span className="text-[9px] font-bold tracking-[0.2em] text-green-500 uppercase relative z-10">Settle</span>
+            {status === 'active' && !isThinking && round >= 2 && <div className="absolute top-[-1px] inset-x-0 h-[2px] sm:h-[3px] bg-green-500 shadow-[0_0_12px_rgba(34,197,94,1)]"></div>}
+            <Banknote className="w-5 h-5 lg:w-6 lg:h-6 text-green-500 relative z-10" />
+            <span className="text-[8px] lg:text-[9px] font-bold tracking-[0.2em] text-green-500 uppercase relative z-10">Settle</span>
           </button>
 
           <button
@@ -529,10 +584,10 @@ export default function Chat() {
               if (status === 'active') handleEndGame(0);
               setShowGameOver(true);
             }}
-            className="group relative flex flex-col items-center justify-center gap-1.5 px-8 min-w-[120px] hover:bg-red-500/10 transition-all"
+            className="group relative flex flex-col items-center justify-center gap-1 px-3 sm:px-8 min-w-[70px] sm:min-w-[120px] hover:bg-red-500/10 transition-all"
           >
-            <LogOut className="w-6 h-6 text-slate-500 group-hover:text-red-400 group-hover:-translate-y-0.5 transition-all" />
-            <span className="text-[9px] font-bold tracking-[0.2em] text-slate-500 group-hover:text-red-400 uppercase transition-colors">Exit</span>
+            <LogOut className="w-5 h-5 lg:w-6 lg:h-6 text-slate-500 group-hover:text-red-400 group-hover:-translate-y-0.5 transition-all" />
+            <span className="text-[8px] lg:text-[9px] font-bold tracking-[0.2em] text-slate-500 group-hover:text-red-400 uppercase transition-colors">Exit</span>
           </button>
         </nav>
 
@@ -569,47 +624,47 @@ export default function Chat() {
               <X className="w-6 h-6 group-hover:scale-110 transition-transform" />
             </button>
 
-            <div className="relative w-full max-w-2xl flex flex-col items-center text-center">
-              <div className="mb-12 relative">
-                <div className="absolute -inset-10 bg-cyan-500/10 blur-[60px] rounded-full animate-pulse"></div>
+            <div className="relative w-full max-w-2xl flex flex-col items-center text-center overflow-y-auto max-h-[90vh] custom-scrollbar px-4">
+              <div className="mb-6 sm:mb-12 relative group">
+                <div className="absolute -inset-10 bg-cyan-500/10 blur-[60px] rounded-full animate-pulse opacity-50 group-hover:opacity-100 transition-opacity"></div>
                 {(status === 'accepted' || status === 'completed') ? (
                   <div className="relative animate-glitch-text">
-                    <h2 className="text-6xl md:text-8xl font-black text-green-500 tracking-[0.2em] uppercase drop-shadow-[0_0_30px_rgba(34,197,94,0.4)]">MISSION<br />COMPLETE</h2>
-                    <p className="mt-4 text-[10px] font-bold tracking-[0.5em] text-green-400/60 uppercase">Synaptic Connection Stabilized</p>
+                    <h2 className="text-4xl sm:text-6xl md:text-8xl font-black text-green-500 tracking-[0.15em] sm:tracking-[0.2em] uppercase drop-shadow-[0_0_30px_rgba(34,197,94,0.4)] leading-tight">MISSION<br />COMPLETE</h2>
+                    <p className="mt-2 sm:mt-4 text-[8px] sm:text-[10px] font-bold tracking-[0.3em] sm:tracking-[0.5em] text-green-400/60 uppercase">Synaptic Connection Stabilized</p>
                   </div>
                 ) : (
                   <div className="relative animate-glitch-text">
-                    <h2 className="text-6xl md:text-8xl font-black text-red-500 tracking-[0.2em] uppercase drop-shadow-[0_0_30px_rgba(239,68,68,0.4)]">LINK<br />SEVERED</h2>
-                    <p className="mt-4 text-[10px] font-bold tracking-[0.5em] text-red-400/60 uppercase">Synaptic Connection Terminated</p>
+                    <h2 className="text-4xl sm:text-6xl md:text-8xl font-black text-red-500 tracking-[0.15em] sm:tracking-[0.2em] uppercase drop-shadow-[0_0_30px_rgba(239,68,68,0.4)] leading-tight">LINK<br />SEVERED</h2>
+                    <p className="mt-2 sm:mt-4 text-[8px] sm:text-[10px] font-bold tracking-[0.3em] sm:tracking-[0.5em] text-red-400/60 uppercase">Synaptic Connection Terminated</p>
                   </div>
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mb-12 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-                <div className="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6 backdrop-blur-md relative group overflow-hidden">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6 w-full mb-8 sm:mb-12 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+                <div className="bg-slate-900/40 border border-slate-800/60 rounded-xl sm:rounded-2xl p-4 sm:p-6 backdrop-blur-md relative group overflow-hidden">
                   <div className="absolute top-0 left-0 w-1 h-full bg-cyan-500 opacity-50"></div>
-                  <span className="block text-[8px] text-slate-500 font-bold tracking-[0.3em] uppercase mb-2">Final Price</span>
-                  <span className="text-2xl font-black text-white tracking-widest">₹{(finalPrice || currentPrice).toLocaleString()}</span>
+                  <span className="block text-[7px] sm:text-[8px] text-slate-500 font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase mb-1 sm:mb-2">Final Price</span>
+                  <span className="text-lg sm:text-2xl font-black text-white tracking-widest">₹{(finalPrice || currentPrice).toLocaleString()}</span>
                 </div>
-                <div className="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6 backdrop-blur-md relative group overflow-hidden">
+                <div className="bg-slate-900/40 border border-slate-800/60 rounded-xl sm:rounded-2xl p-4 sm:p-6 backdrop-blur-md relative group overflow-hidden">
                   <div className="absolute top-0 left-0 w-1 h-full bg-purple-500 opacity-50"></div>
-                  <span className="block text-[8px] text-slate-500 font-bold tracking-[0.3em] uppercase mb-2">Arena Score</span>
-                  <span className="text-2xl font-black text-white tracking-widest">{score || 0}</span>
+                  <span className="block text-[7px] sm:text-[8px] text-slate-500 font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase mb-1 sm:mb-2">Arena Score</span>
+                  <span className="text-lg sm:text-2xl font-black text-white tracking-widest">{score || 0}</span>
                 </div>
-                <div className="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6 backdrop-blur-md relative group overflow-hidden">
+                <div className="col-span-2 md:col-span-1 bg-slate-900/40 border border-slate-800/60 rounded-xl sm:rounded-2xl p-4 sm:p-6 backdrop-blur-md relative group overflow-hidden">
                   <div className="absolute top-0 left-0 w-1 h-full bg-yellow-500 opacity-50"></div>
-                  <span className="block text-[8px] text-slate-500 font-bold tracking-[0.3em] uppercase mb-2">Total Rounds</span>
-                  <span className="text-2xl font-black text-white tracking-widest">{round}</span>
+                  <span className="block text-[7px] sm:text-[8px] text-slate-500 font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase mb-1 sm:mb-2">Total Rounds</span>
+                  <span className="text-lg sm:text-2xl font-black text-white tracking-widest">{round} / {maxRounds}</span>
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-4 w-full animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
                 <button
                   onClick={() => {
                     handleNewRun();
                     setShowGameOver(false);
                   }}
-                  className="flex-1 bg-cyan-500 hover:bg-cyan-400 text-black font-black tracking-[0.2em] uppercase py-5 rounded-xl text-xs transition-all hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_30px_rgba(34,211,238,0.2)]"
+                  className="flex-1 bg-cyan-500 hover:bg-cyan-400 text-black font-black tracking-[0.2em] uppercase py-4 sm:py-5 rounded-xl text-[10px] sm:text-xs transition-all hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_30px_rgba(34,211,238,0.2)]"
                 >
                   New Mission
                 </button>
@@ -620,7 +675,7 @@ export default function Chat() {
                     dispatch(resetChat());
                     navigate('/');
                   }}
-                  className="flex-1 border border-slate-700 hover:border-white text-white font-black tracking-[0.2em] uppercase py-5 rounded-xl text-xs transition-all hover:scale-[1.02] active:scale-[0.98] backdrop-blur-md"
+                  className="flex-1 border border-slate-700 hover:border-white text-white font-black tracking-[0.2em] uppercase py-4 sm:py-5 rounded-xl text-[10px] sm:text-xs transition-all hover:scale-[1.02] active:scale-[0.98] backdrop-blur-md"
                 >
                   Return to Terminal
                 </button>
@@ -645,50 +700,73 @@ export default function Chat() {
         {showInitModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
             <div className="absolute inset-0 bg-[#060B13]/90 backdrop-blur-md animate-fade-in"></div>
-            <div className="relative bg-[#0B111A] border border-cyan-500/30 rounded-2xl p-8 max-w-md w-full shadow-[0_0_50px_rgba(34,211,238,0.15)] animate-fade-in-up">
+            <div className="relative bg-[#0B111A] border border-cyan-500/30 rounded-2xl p-5 sm:p-8 max-w-2xl w-full shadow-[0_0_50px_rgba(34,211,238,0.15)] animate-fade-in-up overflow-y-auto max-h-[90vh] custom-scrollbar">
+
               <button
                 onClick={() => navigate('/')}
-                className="absolute top-4 right-4 p-2 text-slate-500 hover:text-white transition-colors group"
+                className="absolute top-4 right-4 p-2 text-slate-500 hover:text-white transition-colors group z-20"
                 title="Return to Dashboard"
               >
                 <X className="w-5 h-5 group-hover:scale-110 transition-transform" />
               </button>
-              <div className="mb-8">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 bg-cyan-500/10 rounded-lg border border-cyan-500/20">
-                    <SquareTerminal className="w-5 h-5 text-cyan-400" />
-                  </div>
-                  <h2 className="text-xl font-bold text-white tracking-widest uppercase">Target Acquisition</h2>
-                </div>
-                <p className="text-slate-400 text-xs font-medium leading-relaxed tracking-wider">
-                  ARENA INITIALIZATION SEQUENCE: Identify the specific asset or contract you wish to negotiate for.
-                </p>
-              </div>
 
-              <div className="space-y-6">
-                <div className="relative group">
-                  <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none transition-transform duration-300 group-focus-within:translate-x-1">
-                    <Terminal className="w-4 h-4 text-cyan-500/50" />
+              <div className="flex flex-col md:flex-row gap-6 sm:gap-10">
+                <div className="flex-1 flex flex-col">
+                  <div className="mb-6 sm:mb-8">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-2 bg-cyan-500/10 rounded-lg border border-cyan-500/20">
+                        <SquareTerminal className="w-5 h-5 text-cyan-400" />
+                      </div>
+                      <h2 className="text-lg sm:text-xl font-bold text-white tracking-widest uppercase">Target Acquisition</h2>
+                    </div>
+                    <p className="text-slate-400 text-[10px] sm:text-xs font-medium leading-relaxed tracking-wider">
+                      ARENA INITIALIZATION SEQUENCE: Identify the specific asset or contract you wish to negotiate for.
+                    </p>
                   </div>
-                  <input
-                    type="text"
-                    autoFocus
-                    value={customProduct}
-                    onChange={(e) => setCustomProduct(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && onStartWithProduct()}
-                    placeholder="IDENTIFY_ASSET_NAME..."
-                    className="w-full bg-[#050A11] border border-slate-800 focus:border-cyan-500/50 rounded-xl py-4 pl-12 pr-6 text-white text-sm font-mono tracking-widest outline-none transition-all placeholder:text-slate-600 shadow-inner"
-                  />
+
+                  <div className="space-y-4 sm:space-y-6">
+                    <div className="relative group">
+                      <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none transition-transform duration-300 group-focus-within:translate-x-1">
+                        <Terminal className="w-4 h-4 text-cyan-500/50" />
+                      </div>
+                      <input
+                        type="text"
+                        autoFocus
+                        value={customProduct}
+                        onChange={(e) => setCustomProduct(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && onStartWithProduct()}
+                        placeholder="IDENTIFY_ASSET_NAME..."
+                        className="w-full bg-[#050A11] border border-slate-800 focus:border-cyan-500/50 rounded-xl py-3.5 sm:py-4 pl-12 pr-6 text-white text-[12px] sm:text-sm font-mono tracking-widest outline-none transition-all placeholder:text-slate-600 shadow-inner"
+                      />
+                    </div>
+
+                    <button
+                      onClick={onStartWithProduct}
+                      disabled={!customProduct.trim()}
+                      className="w-full relative group overflow-hidden bg-cyan-400 hover:bg-cyan-300 text-[#060B13] font-black tracking-[0.2em] uppercase py-3.5 sm:py-4 rounded-xl text-[10px] sm:text-xs transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      <div className="absolute inset-0 bg-white/20 -translate-x-[120%] skew-x-[-20deg] group-hover:animate-[slide_0.6s_ease-out]"></div>
+                      ESTABLISH UPLINK
+                    </button>
+                  </div>
                 </div>
 
-                <button
-                  onClick={onStartWithProduct}
-                  disabled={!customProduct.trim()}
-                  className="w-full relative group overflow-hidden bg-cyan-400 hover:bg-cyan-300 text-[#060B13] font-black tracking-[0.2em] uppercase py-4 rounded-xl text-xs transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-                >
-                  <div className="absolute inset-0 bg-white/20 -translate-x-[120%] skew-x-[-20deg] group-hover:animate-[slide_0.6s_ease-out]"></div>
-                  ESTABLISH UPLINK
-                </button>
+                <div className="w-full md:w-56 flex flex-col gap-4 border-t md:border-t-0 md:border-l border-slate-800/80 pt-6 md:pt-0 md:pl-8">
+                  <h3 className="text-[10px] font-bold text-slate-500 tracking-[0.2em] uppercase mb-2">Suggested Assets</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-1 gap-2.5">
+                    {suggestions.map((p, i) => (
+                      <button
+                        key={p}
+                        onClick={() => setCustomProduct(p)}
+                        className="group relative px-4 py-2.5 bg-[#0a0f18] border border-slate-800/60 rounded-xl text-[10px] font-bold text-slate-400 hover:text-cyan-400 hover:border-cyan-500/30 transition-all text-left overflow-hidden animate-fade-in-up"
+                        style={{ animationDelay: `${(i + 1) * 0.05}s` }}
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/0 via-cyan-500/0 to-cyan-500/0 group-hover:via-cyan-500/5 transition-all duration-500"></div>
+                        <span className="relative z-10 uppercase tracking-widest truncate block">{p}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>

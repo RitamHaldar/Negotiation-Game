@@ -7,15 +7,15 @@ const Login = () => {
   const navigate = useNavigate();
   const { handleLogin, loading, error } = useAuth();
 
-  const [identifier, setIdentifier] = useState("");
+  const [email, setemail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!identifier || !password) return;
+    if (!email || !password) return;
 
     try {
-      const response = await handleLogin({ username: identifier, email: identifier, password });
+      const response = await handleLogin({ email: email, password: password });
       if (response.success) {
         navigate('/');
       }
@@ -41,14 +41,14 @@ const Login = () => {
 
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-80 shadow-[0_0_15px_rgba(34,211,238,0.8)]"></div>
 
-          <div className="p-8 sm:p-10">
-            <div className="flex flex-col items-center mb-10">
-              <div className="w-16 h-16 bg-[#050A11] border border-slate-800 rounded-xl flex items-center justify-center mb-6 shadow-inner relative group-hover:border-cyan-500/30 transition-colors duration-500">
+          <div className="p-6 sm:p-10">
+            <div className="flex flex-col items-center mb-8 sm:mb-10">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-[#050A11] border border-slate-800 rounded-xl flex items-center justify-center mb-4 sm:mb-6 shadow-inner relative group-hover:border-cyan-500/30 transition-colors duration-500">
                 <div className="absolute inset-0 bg-cyan-500/10 rounded-xl blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <Fingerprint className="w-8 h-8 text-cyan-500 relative z-10" />
+                <Fingerprint className="w-7 h-7 sm:w-8 sm:h-8 text-cyan-500 relative z-10" />
               </div>
-              <h1 className="text-2xl font-black text-white tracking-widest uppercase mb-2">Access Arena</h1>
-              <p className="text-[10px] text-slate-500 font-bold tracking-[0.3em] uppercase">Enter Your Credentials</p>
+              <h1 className="text-xl sm:text-2xl font-black text-white tracking-widest uppercase mb-2">Access Arena</h1>
+              <p className="text-[8px] sm:text-[10px] text-slate-500 font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase">Enter Your Credentials</p>
             </div>
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-6">
@@ -61,16 +61,16 @@ const Login = () => {
               )}
 
               <div className="flex flex-col gap-2 relative">
-                <label className="text-[9px] font-bold text-slate-400 tracking-[0.2em] uppercase ml-1">Username/Email</label>
+                <label className="text-[9px] font-bold text-slate-400 tracking-[0.2em] uppercase ml-1">Email</label>
                 <div className="flex h-14 bg-[#050A11] border border-slate-800 rounded-lg overflow-hidden focus-within:border-cyan-500/50 focus-within:shadow-[0_0_15px_rgba(34,211,238,0.15)] transition-all">
                   <div className="w-12 flex items-center justify-center bg-[#0a0f18] border-r border-slate-800 text-slate-500">
                     <UserCircle className="w-4 h-4" />
                   </div>
                   <input
                     type="text"
-                    value={identifier}
-                    onChange={(e) => setIdentifier(e.target.value)}
-                    placeholder="USERNAME OR EMAIL..."
+                    value={email}
+                    onChange={(e) => setemail(e.target.value)}
+                    placeholder="EMAIL..."
                     className="flex-1 bg-transparent px-4 outline-none text-white text-[13px] tracking-[0.1em] placeholder:text-slate-600 font-mono"
                     required
                   />
@@ -92,15 +92,11 @@ const Login = () => {
                     required
                   />
                 </div>
-
-                <div className="absolute -bottom-6 right-1">
-                  <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest cursor-pointer hover:text-cyan-400 transition-colors">Bypass key?</span>
-                </div>
               </div>
 
               <button
                 type="submit"
-                disabled={loading || !identifier || !password}
+                disabled={loading || !email || !password}
                 className={`mt-6 h-14 bg-[#22c55e] hover:bg-[#16a34a] text-[#060B13] flex justify-center items-center gap-3 rounded-lg font-black tracking-[0.2em] uppercase text-xs transition-all group overflow-hidden relative shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_30px_rgba(34,197,94,0.5)] ${loading ? 'opacity-80 cursor-wait' : ''}`}
               >
                 <div className="absolute inset-0 bg-white/20 -translate-x-[120%] skew-x-[-20deg] group-hover:animate-[slide_0.6s_ease-out]"></div>

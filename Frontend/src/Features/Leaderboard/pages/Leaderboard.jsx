@@ -29,7 +29,7 @@ export default function Leaderboard() {
             </div>
 
             <div className="relative z-10 flex flex-col min-h-screen">
-                <header className="flex-none flex items-center justify-between px-8 py-0 border-b border-slate-800/80 bg-[#060b13]/90 backdrop-blur-xl h-[60px]">
+                <header className="flex-none flex items-center justify-between px-4 sm:px-8 py-0 border-b border-slate-800/80 bg-[#060b13]/90 backdrop-blur-xl h-[60px]">
                     <div className="flex items-center gap-10 h-full">
                         <div className="text-sm font-black tracking-widest text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)] cursor-pointer" onClick={() => navigate('/')}>
                             Nego-Arena
@@ -60,23 +60,23 @@ export default function Leaderboard() {
                     </div>
                 </header>
 
-                <div className="px-8 max-w-[1400px] mx-auto w-full pt-10 pb-20 flex-1 flex flex-col">
-                    <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-16 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+                <div className="px-4 sm:px-8 max-w-[1400px] mx-auto w-full pt-10 pb-20 flex-1 flex flex-col">
+                    <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-10 sm:mb-16 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
                         <div>
                             <button onClick={() => navigate('/')} className="flex items-center gap-2 text-[9px] font-bold text-slate-500 hover:text-slate-300 tracking-[0.2em] uppercase mb-6 group transition-colors">
                                 <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" /> Back to Command
                             </button>
                             <div className="flex items-center gap-3">
-                                <span className="text-5xl drop-shadow-[0_0_15px_rgba(250,204,21,0.5)] select-none pointer-events-none">🏆</span>
-                                <h1 className="text-5xl md:text-6xl font-black italic tracking-wider text-white select-none">LEADERBOARD</h1>
+                                <span className="text-3xl sm:text-5xl drop-shadow-[0_0_15px_rgba(250,204,21,0.5)] select-none pointer-events-none">🏆</span>
+                                <h1 className="text-3xl sm:text-4xl md:text-5xl font-black italic tracking-wider text-white select-none">LEADERBOARD</h1>
                             </div>
                         </div>
 
-                        <div className="flex items-stretch gap-6 h-[80px]">
-                            <div className="bg-[#111620] border border-slate-800/80 rounded-sm relative px-6 py-4 flex flex-col justify-center min-w-[160px] shadow-lg">
+                        <div className="flex items-stretch gap-6 h-[70px] sm:h-[80px]">
+                            <div className="bg-[#111620] border border-slate-800/80 rounded-sm relative px-6 py-4 flex flex-col justify-center min-w-[140px] sm:min-w-[160px] shadow-lg">
                                 <div className="absolute top-0 left-0 bottom-0 w-[3px] bg-cyan-400 shadow-[2px_0_10px_rgba(34,211,238,0.5)]"></div>
-                                <span className="text-[9px] text-slate-500 font-bold tracking-[0.2em] uppercase mb-1">Total Players</span>
-                                <span className="text-white font-black text-2xl tracking-wider">{leaderboard.length}</span>
+                                <span className="text-[8px] sm:text-[9px] text-slate-500 font-bold tracking-[0.2em] uppercase mb-1">Total Players</span>
+                                <span className="text-white font-black text-xl sm:text-2xl tracking-wider">{leaderboard.length}</span>
                             </div>
                         </div>
                     </div>
@@ -105,7 +105,7 @@ export default function Leaderboard() {
                         )}
 
                         {topThree[0] && (
-                            <div className="w-full md:w-[360px] bg-[#1A1A10]/95 backdrop-blur-sm border-[1.5px] border-yellow-500 rounded-sm p-6 relative group z-10 shadow-[0_0_40px_rgba(234,179,8,0.15)] animate-fade-in-up hover:-translate-y-2 transition-transform duration-500 scale-105" style={{ animationDelay: '0.4s', paddingBottom: '35px' }}>
+                            <div className="w-full md:w-[360px] bg-[#1A1A10]/95 backdrop-blur-sm border-[1.5px] border-yellow-500 rounded-sm p-6 relative group z-10 shadow-[0_0_40px_rgba(234,179,8,0.15)] animate-fade-in-up hover:-translate-y-2 transition-transform duration-500 md:scale-105" style={{ animationDelay: '0.4s', paddingBottom: '35px' }}>
                                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-500 text-black px-6 py-1.5 text-[10px] font-black tracking-[0.3em] uppercase tilt-shading shadow-[0_5px_15px_rgba(234,179,8,0.4)]">
                                     CHAMPION
                                 </div>
@@ -190,14 +190,14 @@ export default function Leaderboard() {
                                     <tbody className="divide-y divide-slate-800/40 text-slate-300">
                                         {sortedLeaderboard.map((player, index) => (
                                             <tr key={index} className="hover:bg-slate-800/20 transition-colors">
-                                                <td className="px-8 py-5 font-bold italic text-slate-500">#{index + 1}</td>
-                                                <td className="px-8 py-5 flex items-center gap-4">
-                                                    <div className="w-8 h-8 rounded-full bg-slate-800 overflow-hidden border border-slate-700">
+                                                <td className="px-4 sm:px-8 py-5 font-bold italic text-slate-500 whitespace-nowrap">#{index + 1}</td>
+                                                <td className="px-4 sm:px-8 py-5 flex items-center gap-4">
+                                                    <div className="w-8 h-8 rounded-full bg-slate-800 overflow-hidden border border-slate-700 shrink-0">
                                                         <img src={`https://ui-avatars.com/api/?name=${player.username}&background=0f172a&color=fff&size=32`} alt="Entity" />
                                                     </div>
-                                                    <span className="text-white font-bold uppercase tracking-widest text-xs">{player.username}</span>
+                                                    <span className="text-white font-bold uppercase tracking-widest text-xs truncate max-w-[120px] sm:max-w-none">{player.username}</span>
                                                 </td>
-                                                <td className="px-8 py-5 text-right text-slate-400 font-mono">{player.score?.toLocaleString()}</td>
+                                                <td className="px-4 sm:px-8 py-5 text-right text-slate-400 font-mono whitespace-nowrap">{player.score?.toLocaleString()}</td>
                                             </tr>
                                         ))}
                                     </tbody>

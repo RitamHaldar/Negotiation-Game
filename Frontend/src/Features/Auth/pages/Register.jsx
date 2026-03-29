@@ -40,17 +40,17 @@ const Register = () => {
 
           <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-80 shadow-[0_0_15px_rgba(34,211,238,0.8)]"></div>
 
-          <div className="p-8 sm:p-10">
-            <div className="flex flex-col items-center mb-10">
-              <div className="w-16 h-16 bg-[#050A11] border border-slate-800 rounded-xl flex items-center justify-center mb-6 shadow-inner relative group-hover:border-cyan-500/30 transition-colors duration-500">
+          <div className="p-6 sm:p-10">
+            <div className="flex flex-col items-center mb-8 sm:mb-10">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-[#050A11] border border-slate-800 rounded-xl flex items-center justify-center mb-4 sm:mb-6 shadow-inner relative group-hover:border-cyan-500/30 transition-colors duration-500">
                 <div className="absolute inset-0 bg-cyan-400/10 rounded-xl blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <Terminal className="w-8 h-8 text-cyan-400 relative z-10" />
+                <Terminal className="w-7 h-7 sm:w-8 sm:h-8 text-cyan-400 relative z-10" />
               </div>
-              <h1 className="text-2xl font-black text-white tracking-widest uppercase mb-2">Initialize Profile</h1>
-              <p className="text-[10px] text-slate-500 font-bold tracking-[0.3em] uppercase">Join the Negotiation Arena</p>
+              <h1 className="text-xl sm:text-2xl font-black text-white tracking-widest uppercase mb-2">Initialize Profile</h1>
+              <p className="text-[8px] sm:text-[10px] text-slate-500 font-bold tracking-[0.2em] sm:tracking-[0.3em] uppercase">Join the Negotiation Arena</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4 sm:gap-5">
 
               {error && (
                 <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3 flex items-center gap-3">

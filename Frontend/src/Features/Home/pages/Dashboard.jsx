@@ -47,10 +47,253 @@ const DUMMY_FEED_POOL = [
     { msg: "System: Scheduled maintenance for AI tuning", color: "text-slate-500" }
 ];
 
+const TypewriterText = ({ text, delay = 25, startDelay = 0, onComplete }) => {
+    const [displayedText, setDisplayedText] = useState('');
+    const [isDone, setIsDone] = useState(false);
+
+    useEffect(() => {
+        if (isDone) return;
+
+        let timeout = setTimeout(() => {
+            let i = 0;
+            const interval = setInterval(() => {
+                setDisplayedText(text.slice(0, i + 1));
+                i++;
+                if (i >= text.length) {
+                    clearInterval(interval);
+                    setIsDone(true);
+                    if (onComplete) onComplete();
+                }
+            }, delay);
+            return () => clearInterval(interval);
+        }, startDelay);
+
+        return () => clearTimeout(timeout);
+    }, [text, delay, startDelay, onComplete, isDone]);
+
+    return (
+        <span className={!isDone ? "after:content-['|'] after:animate-pulse after:ml-0.5 after:text-cyan-400" : ""}>
+            {isDone ? text : displayedText}
+        </span>
+    );
+};
+
+const SampleChat = () => {
+    const [currentStep, setCurrentStep] = useState(0);
+
+    useEffect(() => {
+        const timer = setTimeout(() => setCurrentStep(1), 500);
+        return () => clearTimeout(timer);
+    }, []);
+
+    useEffect(() => {
+        let timer;
+        if (currentStep === 2) timer = setTimeout(() => setCurrentStep(3), 1500);
+        if (currentStep === 4) timer = setTimeout(() => setCurrentStep(5), 1500);
+        if (currentStep === 6) timer = setTimeout(() => setCurrentStep(7), 1500);
+        if (currentStep === 8) timer = setTimeout(() => setCurrentStep(9), 1500);
+        if (currentStep === 10) timer = setTimeout(() => setCurrentStep(11), 1500);
+        return () => clearTimeout(timer);
+    }, [currentStep]);
+
+    const nextStep = () => setCurrentStep(prev => prev + 1);
+    const chatContainerRef = (node) => {
+        if (node) {
+            node.scrollTop = node.scrollHeight;
+        }
+    };
+
+    return (
+        <div
+            ref={chatContainerRef}
+            className="flex flex-col gap-6 text-left max-h-[420px] overflow-y-auto pr-3 custom-scrollbar"
+        >
+            {currentStep >= 1 && (
+                <div className="grid grid-cols-[1.2fr_0.8fr] gap-4 animate-fade-in-up">
+                    <div className="bg-cyan-950/40 border border-cyan-500/20 rounded-lg p-3">
+                        <div className="text-[7px] text-cyan-400 font-black uppercase mb-1.5 tracking-widest uppercase">You // Initial_Bid</div>
+                        <div className="text-[11px] text-white leading-tight min-h-[1.5em]">
+                            <TypewriterText
+                                text="I'll start at ₹1,100."
+                                onComplete={() => currentStep === 1 && nextStep()}
+                            />
+                        </div>
+                    </div>
+                    {currentStep >= 2 && (
+                        <div className="flex items-center text-[9px] text-slate-500 font-bold italic border-l border-slate-800 pl-3 leading-tight animate-fade-in">
+                            Setting a low anchor point to test AI resistance.
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {currentStep >= 3 && (
+                <div className="grid grid-cols-[1.2fr_0.8fr] gap-4 animate-fade-in-up">
+                    <div className="bg-purple-900/20 border border-purple-500/20 rounded-lg p-3">
+                        <div className="text-[7px] text-purple-400 font-black uppercase mb-1.5 tracking-widest uppercase">AI // Defensive_Counter</div>
+                        <div className="text-[11px] text-slate-300 leading-tight min-h-[1.5em]">
+                            <TypewriterText
+                                text="₹1,400. This unit is high-tier synaptic hardware."
+                                onComplete={() => currentStep === 3 && nextStep()}
+                            />
+                        </div>
+                    </div>
+                    {currentStep >= 4 && (
+                        <div className="flex items-center text-[9px] text-purple-400/70 font-bold italic border-l border-slate-800 pl-3 leading-tight animate-fade-in">
+                            Sentient entity attempts to justify value via technical specs.
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {currentStep >= 5 && (
+                <div className="grid grid-cols-[1.2fr_0.8fr] gap-4 animate-fade-in-up">
+                    <div className="bg-cyan-950/60 border border-cyan-400/40 rounded-lg p-3 ring-1 ring-cyan-400/10">
+                        <div className="text-[7px] text-cyan-400 font-black uppercase mb-1.5 tracking-widest uppercase">You // Bluff_Sequence</div>
+                        <div className="text-[11px] text-white leading-tight min-h-[1.5em]">
+                            <TypewriterText
+                                text="Wait. Sector B reports a surplus. It's aged technology."
+                                onComplete={() => currentStep === 5 && nextStep()}
+                            />
+                        </div>
+                    </div>
+                    {currentStep >= 6 && (
+                        <div className="flex items-center text-[9px] text-cyan-400/80 font-bold italic border-l border-slate-800 pl-3 leading-tight animate-fade-in">
+                            "Bluffing" about market surplus to lower price leverage.
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {currentStep >= 7 && (
+                <div className="grid grid-cols-[1.2fr_0.8fr] gap-4 animate-fade-in-up">
+                    <div className="bg-purple-900/20 border border-purple-500/20 rounded-lg p-3">
+                        <div className="text-[7px] text-purple-400 font-black uppercase mb-1.5 tracking-widest uppercase">AI // Yield_Concession</div>
+                        <div className="text-[11px] text-slate-300 leading-tight min-h-[1.5em]">
+                            <TypewriterText
+                                text="Analyzing market logs... Data conflict detected. Accepted. ₹1,150 is the optimal re-calibration."
+                                onComplete={() => currentStep === 7 && nextStep()}
+                            />
+                        </div>
+                    </div>
+                    {currentStep >= 8 && (
+                        <div className="flex items-center text-[9px] text-green-500 font-bold italic border-l border-slate-800 pl-3 leading-tight animate-fade-in">
+                            The AI folded due to "market data conflict" bluff.
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {currentStep >= 9 && (
+                <div className="grid grid-cols-[1.2fr_0.8fr] gap-4 animate-fade-in-up">
+                    <div className="bg-cyan-950/60 border border-cyan-400/40 rounded-lg p-3 ring-1 ring-cyan-400/10">
+                        <div className="text-[7px] text-cyan-400 font-black uppercase mb-1.5 tracking-widest uppercase">You // Deal_Finalize</div>
+                        <div className="text-[11px] text-white leading-tight min-h-[1.5em]">
+                            <TypewriterText
+                                text="Excellent. Deal finalized at ₹1,150. I'll take it."
+                                onComplete={() => currentStep === 9 && nextStep()}
+                            />
+                        </div>
+                    </div>
+                    {currentStep >= 10 && (
+                        <div className="flex items-center text-[9px] text-cyan-400 font-bold italic border-l border-slate-800 pl-3 leading-tight animate-fade-in">
+                            Accepting the final price to secure the asset.
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {currentStep >= 11 && (
+                <div className="grid grid-cols-[1.2fr_0.8fr] gap-4 animate-fade-in-up">
+                    <div className="bg-green-900/40 border border-green-500/50 rounded-lg p-3 shadow-[0_0_20px_rgba(34,197,94,0.15)]">
+                        <div className="text-[7px] text-green-400 font-black uppercase mb-1.5 tracking-widest uppercase">AI // Protocol_Accepted</div>
+                        <div className="text-[11px] text-slate-100 leading-tight min-h-[1.5em] font-bold">
+                            <TypewriterText
+                                text="DEAL_ESTABLISHED. Transferring ownership... Uplink complete. Savings recalculated: 23.33%."
+                                onComplete={() => {}}
+                            />
+                        </div>
+                    </div>
+                    <div className="flex items-center text-[9px] text-green-400 font-black animate-pulse border-l border-green-500/30 pl-3 leading-tight uppercase tracking-wider">
+                        Negotiation Success. Points Awarded.
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+const NavigationItem = ({ icon: Icon, label, onClick, isActive, colorClass = "text-slate-400" }) => (
+    <button
+        onClick={onClick}
+        className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 group ${isActive ? 'bg-cyan-500/10 border border-cyan-500/20 shadow-[0_0_20px_rgba(6,182,212,0.1)]' : 'hover:bg-slate-800/40 border border-transparent hover:border-slate-700/50'}`}
+    >
+        <Icon className={`w-5 h-5 transition-transform duration-300 group-hover:scale-110 ${isActive ? 'text-cyan-400' : colorClass} group-hover:text-cyan-400`} />
+        <span className={`text-[11px] font-bold uppercase tracking-[0.2em] transition-colors duration-300 ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'}`}>
+            {label}
+        </span>
+        {isActive && <div className="ml-auto w-1 h-1 rounded-full bg-cyan-400 shadow-[0_0_10px_rgba(6,182,212,0.8)]"></div>}
+    </button>
+);
+
+const SidebarContent = ({ userStats, authUser, handleLogout, onNavigate, onHelp, activePath }) => (
+    <div className="flex flex-col h-full p-6 animate-fade-in">
+        <div className="mb-12 shrink-0">
+            <div className="text-2xl font-black tracking-widest text-cyan-500 flex items-center gap-3">
+                <Terminal className="w-6 h-6" />
+                <span>NegoArena</span>
+            </div>
+            <div className="mt-1 text-[8px] font-bold text-slate-600 uppercase tracking-[0.3em]">Cortex Interface v2.4</div>
+        </div>
+
+        <div className="space-y-2 flex-1">
+            <div className="text-[9px] font-black text-slate-600 uppercase tracking-[0.3em] mb-4 ml-4">Main Menu</div>
+            <NavigationItem icon={User} label="Dashboard" isActive={activePath === '/dashboard'} onClick={() => onNavigate('/dashboard')} />
+            <NavigationItem icon={BarChart3} label="Leaderboard" isActive={activePath === '/leaderboard'} onClick={() => onNavigate('/leaderboard')} />
+            <NavigationItem icon={HelpCircle} label="How to Play" onClick={onHelp} />
+            
+            <div className="pt-8 pb-4">
+                <div className="text-[9px] font-black text-slate-600 uppercase tracking-[0.3em] mb-4 ml-4">Player Stats</div>
+                <div className="bg-slate-900/40 border border-slate-800/60 rounded-xl p-4 space-y-4">
+                    <div className="flex flex-col gap-1">
+                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Global Rank</span>
+                        <span className="text-xl font-black text-cyan-400 tracking-tight">#{userStats.rank || 'N/A'}</span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Arena Score</span>
+                        <div className="flex items-baseline gap-1">
+                            <span className="text-xl font-black text-white tracking-tight">{userStats.score || '0'}</span>
+                            <span className="text-[9px] font-bold text-cyan-500 uppercase">PTS</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div className="mt-auto pt-6 border-t border-slate-800/60 shrink-0 space-y-4">
+            <div className="flex items-center gap-3 bg-slate-800/40 p-3 rounded-xl border border-slate-700/30">
+                <div className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 overflow-hidden flex items-center justify-center shrink-0">
+                    <img 
+                        src={authUser?.avatar || `https://ui-avatars.com/api/?name=${authUser?.user || 'User'}&background=0284c7&color=fff&bold=true`} 
+                        alt="User" 
+                        className="w-full h-full object-cover" 
+                    />
+                </div>
+                <div className="flex flex-col overflow-hidden">
+                    <span className="text-[10px] font-black text-white uppercase tracking-wider truncate">{authUser?.user || 'Guest'}</span>
+                    <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Active Link</span>
+                </div>
+            </div>
+            <NavigationItem icon={LogOut} label="Log Out" colorClass="text-red-400" onClick={handleLogout} />
+        </div>
+    </div>
+);
+
 export default function Dashboard() {
     const navigate = useNavigate();
     const [showHowToPlay, setShowHowToPlay] = useState(false);
     const [showBluffModal, setShowBluffModal] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [text, setText] = useState('Start New Negotiation');
     const { user: authUser, handleLogout } = useAuth();
     const dispatch = useDispatch();
@@ -132,108 +375,64 @@ export default function Dashboard() {
         if (intervalId) clearInterval(intervalId);
         setText(originalText);
     };
-    const SampleChat = () => (
-        <div className="flex flex-col gap-5 text-left max-h-[380px] overflow-y-auto pr-3 custom-scrollbar">
-            <div className="grid grid-cols-[1.2fr_0.8fr] gap-4 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-                <div className="bg-cyan-950/40 border border-cyan-500/20 rounded-lg p-2.5">
-                    <div className="text-[7px] text-cyan-400 font-black uppercase mb-1 tracking-widest">You // Initial_Bid</div>
-                    <div className="text-[11px] text-white leading-tight">"I'll start at ₹1,100."</div>
-                </div>
-                <div className="flex items-center text-[9px] text-slate-500 font-bold italic border-l border-slate-800 pl-3 leading-tight animate-fade-in" style={{ animationDelay: '0.4s' }}>
-                    Setting a low anchor point to test AI resistance.
-                </div>
-            </div>
-
-            <div className="grid grid-cols-[1.2fr_0.8fr] gap-4 animate-fade-in-up" style={{ animationDelay: '0.8s' }}>
-                <div className="bg-purple-900/20 border border-purple-500/20 rounded-lg p-2.5">
-                    <div className="text-[7px] text-purple-400 font-black uppercase mb-1 tracking-widest">AI // Defensive_Counter</div>
-                    <div className="text-[11px] text-slate-300 leading-tight">"₹1,400. This unit is high-tier synaptic hardware."</div>
-                </div>
-                <div className="flex items-center text-[9px] text-purple-400/70 font-bold italic border-l border-slate-800 pl-3 leading-tight animate-fade-in" style={{ animationDelay: '1.2s' }}>
-                    Sentient entity attempts to justify value via technical specs.
-                </div>
-            </div>
-
-            <div className="grid grid-cols-[1.2fr_0.8fr] gap-4 animate-fade-in-up" style={{ animationDelay: '1.6s' }}>
-                <div className="bg-cyan-950/60 border border-cyan-400/40 rounded-lg p-2.5 ring-1 ring-cyan-400/10">
-                    <div className="text-[7px] text-cyan-400 font-black uppercase mb-1 tracking-widest">You // Bluff_Sequence</div>
-                    <div className="text-[11px] text-white leading-tight">"Wait. Sector B reports a surplus. It's aged technology."</div>
-                </div>
-                <div className="flex items-center text-[9px] text-cyan-400/80 font-bold italic border-l border-slate-800 pl-3 leading-tight animate-fade-in" style={{ animationDelay: '2s' }}>
-                    "Bluffing" about market surplus to lower price leverage.
-                </div>
-            </div>
-
-            <div className="grid grid-cols-[1.2fr_0.8fr] gap-4 animate-fade-in-up" style={{ animationDelay: '2.4s' }}>
-                <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-2.5 shadow-[0_0_15px_rgba(34,197,94,0.1)]">
-                    <div className="text-[7px] text-green-400 font-black uppercase mb-1 tracking-widest">AI // Yield_Concession</div>
-                    <div className="text-[11px] text-slate-200 leading-tight">"Analyzing market logs... Accepted. ₹1,150 is optimal."</div>
-                </div>
-                <div className="flex items-center text-[9px] text-green-500 font-bold italic border-l border-slate-800 pl-3 leading-tight animate-fade-in" style={{ animationDelay: '2.8s' }}>
-                    Success. The AI folded due to "data conflict".
-                </div>
-            </div>
-        </div>
-    );
 
     return (
-        <div className="min-h-screen bg-[#060b13] text-slate-200 overflow-x-hidden relative font-sans selection:bg-cyan-500/30">
-            <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-                <div
-                    className="absolute inset-0 opacity-[0.02]"
-                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 40V0h40' fill='none' stroke='%23ffffff' stroke-width='1'/%3E%3C/svg%3E")` }}
-                ></div>
-                <div className="absolute top-[-10%] left-1/4 w-[600px] h-[600px] bg-cyan-900/20 rounded-full blur-[120px] mix-blend-screen animate-pulse-slow"></div>
-                <div className="absolute bottom-[20%] right-[-10%] w-[800px] h-[800px] bg-green-900/10 rounded-full blur-[150px] mix-blend-screen animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
-            </div>
+        <div className="flex min-h-screen bg-[#060b13] text-slate-200 font-sans selection:bg-cyan-500/30">
+            <aside className="hidden lg:block w-70 bg-[#0B111A]/60 backdrop-blur-2xl border-r border-slate-800/60 sticky top-0 h-screen z-50">
+                <SidebarContent 
+                    userStats={userStats} 
+                    authUser={authUser} 
+                    handleLogout={async () => { await handleLogout(); navigate('/login'); }} 
+                    onNavigate={navigate}
+                    onHelp={() => setShowHowToPlay(true)}
+                    activePath="/dashboard"
+                />
+            </aside>
 
-            <div className="relative z-10 flex flex-col min-h-screen">
-
-                <header className="flex items-center justify-between px-6 py-4 border-b border-slate-800/60 bg-[#060b13]/80 backdrop-blur-xl sticky top-0 z-50">
-                    <div className="flex items-center gap-2">
-                        <div className="text-xl font-black tracking-widest text-cyan-500">
-                            NegoArena
-                        </div>
-                    </div>
-
-                    <div className="hidden md:flex items-center gap-12 text-[9px] tracking-[0.2em] font-bold text-slate-500 uppercase">
-                        <div className="flex flex-col items-center gap-1">
-                            <span>Global Ranking</span>
-                            <span className="text-cyan-400">Rank: {userStats.rank || 'N/A'}</span>
-                        </div>
-                        <div className="flex flex-col items-center gap-1">
-                            <span>Score</span>
-                            <span className="text-cyan-400">{userStats.score || '0'} Points</span>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-3 bg-slate-800/40 pl-4 pr-1 py-1 rounded-full border border-slate-700/50">
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{authUser?.user || 'Guest'}</span>
-                            <div className="w-8 h-8 rounded-full bg-slate-800 border-2 border-slate-700 overflow-hidden">
-                                <img src={authUser?.avatar || `https://ui-avatars.com/api/?name=${authUser?.user || 'User'}&background=0284c7&color=fff&bold=true`} alt="User" className="w-full h-full object-cover" />
-                            </div>
-                        </div>
-
-                        <button
-                            onClick={async () => {
-                                await handleLogout();
-                                navigate('/login');
+            {isSidebarOpen && (
+                <div className="lg:hidden fixed inset-0 z-[100] flex">
+                    <div className="absolute inset-0 bg-[#060b13]/80 backdrop-blur-md animate-fade-in" onClick={() => setIsSidebarOpen(false)}></div>
+                    <aside className="relative w-70 h-full bg-[#0B111A] border-r border-slate-800 shadow-[20px_0_50px_rgba(0,0,0,0.5)] animate-slide-right">
+                        <SidebarContent 
+                            userStats={userStats} 
+                            authUser={authUser} 
+                            handleLogout={async () => { await handleLogout(); navigate('/login'); }} 
+                            onNavigate={navigate}
+                            onHelp={() => {
+                                setShowHowToPlay(true);
+                                setIsSidebarOpen(false);
                             }}
-                            className="flex items-center gap-2 text-slate-500 hover:text-red-400 transition-colors group"
-                            title="Logout"
-                        >
-                            <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                        </button>
-                    </div>
-                </header>
+                            activePath="/dashboard"
+                        />
+                    </aside>
+                </div>
+            )}
 
-                <section className="relative px-6 py-20 flex flex-col items-center text-center overflow-hidden">
-                    <div className="absolute top-1/2 left-[15%] -translate-x-1/2 -translate-y-[60%] text-[10rem] md:text-[15rem] font-bold text-slate-800/10 select-none animate-float pointer-events-none" style={{ animationDelay: "0s" }}>₹850</div>
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[40%] text-[12rem] md:text-[20rem] font-bold text-slate-800/5 select-none animate-float pointer-events-none" style={{ animationDelay: "1.5s" }}>₹420</div>
-                    <div className="absolute top-1/2 left-[85%] -translate-x-1/2 -translate-y-[50%] text-[8rem] md:text-[12rem] font-bold text-slate-800/10 select-none animate-float pointer-events-none" style={{ animationDelay: "3s" }}>₹95</div>
+            <div className="flex-1 flex flex-col relative overflow-x-hidden min-h-screen">
+                <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+                    <div
+                        className="absolute inset-0 opacity-[0.02]"
+                        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 40V0h40' fill='none' stroke='%23ffffff' stroke-width='1'/%3E%3C/svg%3E")` }}
+                    ></div>
+                    <div className="absolute top-[-10%] left-1/4 w-[600px] h-[600px] bg-cyan-900/20 rounded-full blur-[120px] mix-blend-screen animate-pulse-slow"></div>
+                </div>
 
-                    <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-white mb-6 leading-[1.1] animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
+                <div className="lg:hidden flex items-center justify-between px-6 py-4 border-b border-slate-800/60 bg-[#060b13]/80 backdrop-blur-xl sticky top-0 z-40">
+                    <div className="text-xl font-black tracking-widest text-cyan-500">NegoArena</div>
+                    <button onClick={() => setIsSidebarOpen(true)} className="p-2 text-slate-400 hover:text-white transition-colors">
+                        <Terminal className="w-6 h-6" />
+                    </button>
+                </div>
+
+                <div className="relative z-10 flex flex-col flex-1">
+
+
+                <section className="relative px-4 sm:px-6 py-12 sm:py-20 flex flex-col items-center text-center overflow-hidden">
+                    <div className="absolute top-1/2 left-[15%] -translate-x-1/2 -translate-y-[60%] text-[6rem] sm:text-[10rem] md:text-[15rem] font-bold text-slate-800/10 select-none animate-float pointer-events-none" style={{ animationDelay: "0s" }}>₹850</div>
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[40%] text-[8rem] sm:text-[12rem] md:text-[20rem] font-bold text-slate-800/5 select-none animate-float pointer-events-none" style={{ animationDelay: "1.5s" }}>₹420</div>
+                    <div className="absolute top-1/2 left-[85%] -translate-x-1/2 -translate-y-[50%] text-[5rem] sm:text-[8rem] md:text-[12rem] font-bold text-slate-800/10 select-none animate-float pointer-events-none" style={{ animationDelay: "3s" }}>₹95</div>
+
+                    <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold tracking-tight text-white mb-6 leading-[1.1] animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
                         Outsmart the <span className="italic text-cyan-400">AI.</span><br />
                         Win the <span className="text-green-500 drop-shadow-[0_0_20px_rgba(34,197,94,0.3)]">Deal.</span>
                     </h1>
@@ -275,21 +474,21 @@ export default function Dashboard() {
                             onClick={() => setShowHowToPlay(false)}
                         ></div>
 
-                        <div className="relative w-[550px] max-w-full max-h-[90vh] bg-[#0B111A]/95 backdrop-blur-3xl border border-cyan-500/30 rounded-2xl p-7 shadow-[0_25px_60px_rgba(0,0,0,0.9),0_0_40px_rgba(34,211,238,0.15)] animate-fade-in-up flex flex-col overflow-hidden">
+                        <div className="relative w-full max-w-[550px] max-h-[90vh] bg-[#0B111A]/95 backdrop-blur-3xl border border-cyan-500/30 rounded-2xl p-5 sm:p-7 shadow-[0_25px_60px_rgba(0,0,0,0.9),0_0_40px_rgba(34,211,238,0.15)] animate-fade-in-up flex flex-col overflow-hidden">
                             <div className="flex items-center justify-between mb-6 border-b border-slate-800 pb-4 shrink-0">
-                                <div className="flex flex-col">
-                                    <h4 className="text-[11px] font-black tracking-[0.3em] text-cyan-400 uppercase">Training Sequence</h4>
-                                    <span className="text-[8px] text-slate-500 font-bold tracking-[0.1em] uppercase mt-0.5">Tactical Negotiation Manual v1.0</span>
+                                <div className="flex flex-col text-left">
+                                    <h4 className="text-[9px] sm:text-[11px] font-black tracking-[0.3em] text-cyan-400 uppercase">Training Sequence</h4>
+                                    <span className="text-[7px] sm:text-[8px] text-slate-500 font-bold tracking-[0.1em] uppercase mt-0.5">Tactical Negotiation Manual v1.0</span>
                                 </div>
                                 <button onClick={() => setShowHowToPlay(false)} className="w-8 h-8 rounded-full border border-slate-800 flex items-center justify-center text-slate-500 hover:text-white hover:border-slate-600 transition-all">×</button>
                             </div>
 
                             <SampleChat />
 
-                            <div className="mt-6 pt-4 border-t border-slate-800 space-y-3 shrink-0">
+                            <div className="mt-6 pt-4 border-t border-slate-800 space-y-3 shrink-0 overflow-y-auto pr-1">
                                 <div className="flex gap-4 animate-fade-in" style={{ animationDelay: '1.8s' }}>
-                                    <div className="w-6 h-6 rounded bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-[10px] font-black shrink-0 shadow-[0_0_10px_rgba(34,211,238,0.2)]">01</div>
-                                    <p className="text-[10px] text-slate-400 leading-relaxed text-left">Input your price. Watch AI tension levels to gauge if they'll fold.</p>
+                                    <div className="w-6 h-6 rounded bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-[9px] sm:text-[10px] font-black shrink-0 shadow-[0_0_10px_rgba(34,211,238,0.2)]">01</div>
+                                    <p className="text-[9px] sm:text-[10px] text-slate-400 leading-relaxed text-left">Input your price. Watch AI tension levels to gauge if they'll fold.</p>
                                 </div>
                                 <div className="flex gap-4 animate-fade-in" style={{ animationDelay: '2s' }}>
                                     <div className="w-6 h-6 rounded bg-purple-500/20 text-purple-400 flex items-center justify-center text-[10px] font-black shrink-0 shadow-[0_0_10px_rgba(168,85,247,0.2)]">02</div>
@@ -328,7 +527,7 @@ export default function Dashboard() {
                         ></div>
 
                         <div className="relative w-[500px] max-w-full bg-[#0B111A]/95 backdrop-blur-3xl border border-purple-500/30 rounded-2xl p-8 shadow-[0_25px_60px_rgba(0,0,0,0.9),0_0_40px_rgba(168,85,247,0.15)] animate-fade-in-up flex flex-col text-center">
-                            <button 
+                            <button
                                 onClick={() => setShowBluffModal(false)}
                                 className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors"
                             >
@@ -491,8 +690,8 @@ export default function Dashboard() {
                             <h3 className="text-xl font-bold flex items-center gap-3"><BarChart3 className="text-cyan-400 w-5 h-5" /> Global Rankings</h3>
                             <button onClick={() => navigate('/leaderboard')} className="text-[10px] font-bold tracking-[0.1em] text-cyan-400 hover:text-cyan-300 uppercase transition-colors">View Full Leaderboard</button>
                         </div>
-                        <div className="bg-[#0B111A] border border-slate-800 rounded-xl overflow-hidden shadow-lg">
-                            <table className="w-full text-left text-sm">
+                        <div className="bg-[#0B111A] border border-slate-800 rounded-xl overflow-x-auto shadow-lg custom-scrollbar">
+                            <table className="w-full text-left text-sm min-w-[500px]">
                                 <thead className="text-[9px] text-slate-500 uppercase tracking-widest border-b border-slate-800 bg-[#060b13]/50">
                                     <tr>
                                         <th className="px-6 py-5 font-bold">Rank</th>
@@ -541,11 +740,13 @@ export default function Dashboard() {
                         <div className="bg-[#050B14] border border-slate-800 rounded-xl p-5 font-mono text-[11px] leading-relaxed space-y-4 h-[320px] overflow-y-auto relative custom-scrollbar shadow-[inset_0_4px_20px_rgba(0,0,0,0.5)]">
                             <div className="space-y-4">
                                 {dummyFeed.map((l, i) => (
-                                    <div key={l.id} className="flex gap-3 animate-fade-in-up" style={{ animationDelay: `${i * 0.15}s` }}>
+                                    <div key={l.id} className="flex gap-3 animate-fade-in-up" style={{ animationDelay: `${i * 0.4}s` }}>
                                         <span className="text-green-500 shrink-0 select-none">▶</span>
                                         <div>
                                             <span className="text-slate-500 mr-2">[{l.ts}]</span>
-                                            <span className={l.color}>{l.msg}</span>
+                                            <span className={l.color}>
+                                                <TypewriterText text={l.msg} delay={20} />
+                                            </span>
                                         </div>
                                     </div>
                                 ))}
@@ -592,6 +793,8 @@ export default function Dashboard() {
                         </div>
                     </div>
                 </section>
+                    <div className="absolute bottom-[20%] right-[-10%] w-[800px] h-[800px] bg-green-900/10 rounded-full blur-[150px] mix-blend-screen animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
+                </div>
             </div>
         </div>
     );
