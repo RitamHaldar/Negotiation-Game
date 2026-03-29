@@ -793,7 +793,7 @@ export default function Dashboard() {
                         </div>
                     </div>
                 </section>
-                    <div className="absolute bottom-[20%] right-[-10%] w-[800px] h-[800px] bg-green-900/10 rounded-full blur-[150px] mix-blend-screen animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
+                    <div className="absolute bottom-[20%] right-[-10%] w-[800px] h-[800px] bg-green-900/10 rounded-full blur-[150px] mix-blend-screen animate-pulse-slow pointer-events-none" style={{ animationDelay: '2s' }}></div>
                 </div>
             </div>
         </div>
