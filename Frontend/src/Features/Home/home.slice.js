@@ -8,10 +8,7 @@ const initialState = {
         winRate: "0%",
         totalProfit: 0,
     },
-
     topRankings: [],
-    liveFeed: [],
-
     loading: false,
     error: null,
 };
@@ -25,9 +22,6 @@ const homeSlice = createSlice({
         },
         setTopRankings: (state, action) => {
             state.topRankings = action.payload;
-        },
-        setLiveFeed: (state, action) => {
-            state.liveFeed = action.payload;
         },
         setLoading: (state, action) => {
             state.loading = action.payload;

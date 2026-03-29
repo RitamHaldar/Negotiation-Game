@@ -12,7 +12,7 @@ const initialState = {
     userPrice: 0,
     round: 1,
     maxRounds: 10,
-    patience: 10,
+    patience: 100,
     status: "idle",
 
     finalPrice: null,
@@ -37,6 +37,7 @@ const chatSlice = createSlice({
             state.targetPrice = targetPrice;
             state.minPrice = minPrice;
             state.difficulty = difficulty;
+            state.maxRounds = difficulty === "hard" ? 6 : 10;
             state.status = "active";
             state.currentPrice = startingPrice;
             state.userPrice = targetPrice;
@@ -54,11 +55,14 @@ const chatSlice = createSlice({
         },
         updateGameProgress: (state, action) => {
             const { round, patience, status, score, finalPrice } = action.payload;
-            if (round !== undefined) state.round = round;
-            if (patience !== undefined) state.patience = patience;
-            if (status !== undefined) state.status = status;
-            if (score !== undefined) state.score = score;
-            if (finalPrice !== undefined) state.finalPrice = finalPrice;
+            if (round) state.round = round;
+            if (patience) state.patience = patience;
+            if (status) state.status = status;
+            if (score) state.score = score;
+            if (finalPrice) state.finalPrice = finalPrice;
+        },
+        setPatience: (state, action) => {
+            state.patience = action.payload;
         },
         setThinking: (state, action) => {
             state.isThinking = action.payload;
@@ -77,6 +81,7 @@ export const {
     setGame,
     addMessage,
     updateGameProgress,
+    setPatience,
     setThinking,
     setLoading,
     setError,

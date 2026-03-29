@@ -9,7 +9,7 @@ import {
 
 export const useHome = () => {
     const dispatch = useDispatch();
-    const { userStats, topRankings, liveFeed, loading, error } = useSelector(state => state.home);
+    const { userStats, topRankings, loading, error } = useSelector(state => state.home);
 
     const getUserStats = async () => {
         dispatch(setLoading(true));
@@ -55,7 +55,6 @@ export const useHome = () => {
     return {
         userStats,
         topRankings,
-        liveFeed,
         loading,
         error,
         getUserStats,

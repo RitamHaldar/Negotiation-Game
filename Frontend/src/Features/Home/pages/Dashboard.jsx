@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { useHome } from '../hooks/useHome';
 import { useAuth } from '../../Auth/hooks/useAuth';
+import { useDispatch } from 'react-redux';
+import { resetChat } from '../../Chat/chat.slice';
 import {
     Play,
     Brain,
@@ -13,48 +15,49 @@ import {
     Crosshair,
     HelpCircle,
     CircleDollarSign,
-    LogOut
+    LogOut,
+    User
 } from 'lucide-react';
 
 const DUMMY_FEED_POOL = [
-    { msg: "User Player42 closed at ₹620 (Mark +15)", color: "text-green-400" },
-    { msg: "AI rejected offer from Neo_Bargain ❌", color: "text-slate-400" },
-    { msg: "System: New high score in Bluff Mode by Shadow", color: "text-cyan-400" },
-    { msg: "User V-100 successfully bluffed AI (Profit +₹400)", color: "text-[#FF4455]" },
-    { msg: "Global market volatility increased by 5.4%", color: "text-slate-500" },
-    { msg: "User ZeroCool accepted terminal deal at ₹3,200", color: "text-green-400" },
-    { msg: "AI neural pathways optimizing for Hard Mode...", color: "text-purple-400" },
-    { msg: "Time Attack mode successfully completed by Cipher", color: "text-cyan-500" },
-    { msg: "User Trinity failed to negotiate Void-Link", color: "text-red-500" },
-    { msg: "Hardware surplus detected. Difficulty adjusted.", color: "text-slate-500" },
-    { msg: "Match: User Glitch77 secured a 45% discount", color: "text-green-400" },
-    { msg: "System: Server load optimization complete", color: "text-slate-400" },
-    { msg: "Alert: AI caught bluff attempt by User AlphaDog", color: "text-red-500" },
-    { msg: "Global market trend shows rising hardware costs", color: "text-orange-400" },
-    { msg: "User Phantom reached Level 50 Negotiation Mastery", color: "text-yellow-400" },
-    { msg: "AI accepted counter-offer from BladeRunner", color: "text-green-400" },
-    { msg: "System anomaly: Unexpected price drop in Sector 4", color: "text-purple-400" },
-    { msg: "User Matrix_Neo lost 20 points due to timeout", color: "text-red-400" },
-    { msg: "Match: 1v1 Arena challenge issued by Top Ranker", color: "text-cyan-400" },
-    { msg: "Server: Daily negotiation quota hit peak threshold", color: "text-slate-500" },
-    { msg: "User Synth_Wave triggered a legendary AI concession", color: "text-yellow-300" },
-    { msg: "Market watch: Demand for encryption chips dropped", color: "text-slate-400" },
-    { msg: "Warning: AI aggression shifted to Maximum", color: "text-red-500" },
-    { msg: "User Oracle achieved flawless back-to-back deals", color: "text-green-400" },
-    { msg: "System maintenance scheduled for neural network recalibration", color: "text-slate-500" }
+    { msg: "User Arjun closed deal at ₹610 (Profit +₹120)", color: "text-green-400" },
+    { msg: "AI rejected offer from Sneha ❌", color: "text-slate-400" },
+    { msg: "System: New Bluff Mode record set by Rohan", color: "text-cyan-400" },
+    { msg: "User Kavya exposed AI bluff successfully (Saved ₹380)", color: "text-[#FF4455]" },
+    { msg: "Market update: Electronics prices surged by 4.8%", color: "text-slate-500" },
+    { msg: "User Rahul finalized deal at ₹3,150", color: "text-green-400" },
+    { msg: "AI recalibrating strategy for Hard Mode...", color: "text-purple-400" },
+    { msg: "Time Attack cleared by Ananya in record time", color: "text-cyan-500" },
+    { msg: "User Vikram failed to detect AI bluff", color: "text-red-500" },
+    { msg: "Supply surplus detected. Difficulty adjusted.", color: "text-slate-500" },
+    { msg: "Match: User Priya secured a 42% discount", color: "text-green-400" },
+    { msg: "System: Server optimization complete", color: "text-slate-400" },
+    { msg: "Alert: AI bluff detected by User Karan", color: "text-green-400" },
+    { msg: "Market trend: Hardware costs gradually increasing", color: "text-orange-400" },
+    { msg: "User Neha reached Level 50 Negotiation Mastery", color: "text-yellow-400" },
+    { msg: "AI accepted counter-offer from Aditya", color: "text-green-400" },
+    { msg: "System anomaly: Price fluctuation detected in Zone 3", color: "text-purple-400" },
+    { msg: "User Aman lost 25 points due to missed bluff detection", color: "text-red-400" },
+    { msg: "Match: 1v1 Arena challenge initiated by top player", color: "text-cyan-400" },
+    { msg: "Server: Peak negotiation traffic reached", color: "text-slate-500" },
+    { msg: "User Isha identified a rare AI deception", color: "text-yellow-300" },
+    { msg: "Market watch: Demand for chips slightly dropped", color: "text-slate-400" },
+    { msg: "Warning: AI bluff frequency increased", color: "text-red-500" },
+    { msg: "User Dev caught consecutive AI bluffs", color: "text-green-400" },
+    { msg: "System: Scheduled maintenance for AI tuning", color: "text-slate-500" }
 ];
 
 export default function Dashboard() {
     const navigate = useNavigate();
     const [showHowToPlay, setShowHowToPlay] = useState(false);
-
+    const [showBluffModal, setShowBluffModal] = useState(false);
+    const [text, setText] = useState('Start New Negotiation');
     const { user: authUser, handleLogout } = useAuth();
+    const dispatch = useDispatch();
 
     const {
         userStats,
         topRankings,
-        liveFeed,
-        loading,
         getUserStats,
         getTopRankings
     } = useHome();
@@ -99,7 +102,36 @@ export default function Dashboard() {
 
         loadDashboardData();
     }, []);
+    const [intervalId, setIntervalId] = useState(null);
+    const originalText = 'Start New Negotiation';
+    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
 
+    const handleScramble = () => {
+        if (intervalId) clearInterval(intervalId);
+
+        let iteration = 0;
+        const newIntervalId = setInterval(() => {
+            setText(originalText.split("")
+                .map((char, index) => {
+                    if (index < iteration) return originalText[index];
+                    return characters[Math.floor(Math.random() * characters.length)];
+                })
+                .join("")
+            );
+
+            if (iteration >= originalText.length) {
+                clearInterval(newIntervalId);
+            }
+            iteration += 1 / 3;
+        }, 30);
+
+        setIntervalId(newIntervalId);
+    };
+
+    const handleMouseLeave = () => {
+        if (intervalId) clearInterval(intervalId);
+        setText(originalText);
+    };
     const SampleChat = () => (
         <div className="flex flex-col gap-5 text-left max-h-[380px] overflow-y-auto pr-3 custom-scrollbar">
             <div className="grid grid-cols-[1.2fr_0.8fr] gap-4 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
@@ -115,10 +147,10 @@ export default function Dashboard() {
             <div className="grid grid-cols-[1.2fr_0.8fr] gap-4 animate-fade-in-up" style={{ animationDelay: '0.8s' }}>
                 <div className="bg-purple-900/20 border border-purple-500/20 rounded-lg p-2.5">
                     <div className="text-[7px] text-purple-400 font-black uppercase mb-1 tracking-widest">AI // Defensive_Counter</div>
-                    <div className="text-[11px] text-slate-300 leading-tight">"₹1,400. This unit is high-tier neural hardware."</div>
+                    <div className="text-[11px] text-slate-300 leading-tight">"₹1,400. This unit is high-tier synaptic hardware."</div>
                 </div>
                 <div className="flex items-center text-[9px] text-purple-400/70 font-bold italic border-l border-slate-800 pl-3 leading-tight animate-fade-in" style={{ animationDelay: '1.2s' }}>
-                    AI attempts to justify value via technical specs.
+                    Sentient entity attempts to justify value via technical specs.
                 </div>
             </div>
 
@@ -160,7 +192,7 @@ export default function Dashboard() {
                 <header className="flex items-center justify-between px-6 py-4 border-b border-slate-800/60 bg-[#060b13]/80 backdrop-blur-xl sticky top-0 z-50">
                     <div className="flex items-center gap-2">
                         <div className="text-xl font-black tracking-widest text-cyan-500">
-                            Nego<span className="text-white">-</span>Arena
+                            NegoArena
                         </div>
                     </div>
 
@@ -201,27 +233,29 @@ export default function Dashboard() {
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[40%] text-[12rem] md:text-[20rem] font-bold text-slate-800/5 select-none animate-float pointer-events-none" style={{ animationDelay: "1.5s" }}>₹420</div>
                     <div className="absolute top-1/2 left-[85%] -translate-x-1/2 -translate-y-[50%] text-[8rem] md:text-[12rem] font-bold text-slate-800/10 select-none animate-float pointer-events-none" style={{ animationDelay: "3s" }}>₹95</div>
 
-                    <div className="animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
-                        <div className="inline-flex items-center gap-2 border border-blue-900/50 bg-blue-950/20 rounded-full px-4 py-1.5 text-[10px] text-blue-300 tracking-[0.2em] font-bold uppercase mb-8 shadow-[0_0_15px_rgba(59,130,246,0.1)] backdrop-blur-sm">
-                            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(34,211,238,0.8)] ring-2 ring-cyan-400/20"></span>
-                            Neural Link Active
-                        </div>
-                    </div>
-
                     <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-white mb-6 leading-[1.1] animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
                         Outsmart the <span className="italic text-cyan-400">AI.</span><br />
                         Win the <span className="text-green-500 drop-shadow-[0_0_20px_rgba(34,197,94,0.3)]">Deal.</span>
                     </h1>
 
                     <p className="text-slate-400 max-w-2xl text-lg mb-10 animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
-                        The ultimate digital bargaining pit. Negotiate, bluff, and close at the lowest price against world-class neural models.
+                        The ultimate digital bargaining pit. Negotiate, bluff, and close at the lowest price against state-of-the-art sentient cores.
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center gap-4 animate-fade-in-up relative" style={{ animationDelay: "0.4s" }}>
-                        <button onClick={() => navigate('/chat')} className="group relative bg-[#22c55e] hover:bg-[#16a34a] text-black font-bold px-8 py-3.5 rounded flex items-center gap-3 transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(34,197,94,0.2)] hover:shadow-[0_0_30px_rgba(34,197,94,0.4)] overflow-hidden">
-                            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
-                            <Play className="w-5 h-5 relative z-10" />
-                            <span className="relative z-10">Start New Negotiation</span>
+                        <button
+                            onMouseEnter={handleScramble}
+                            onMouseLeave={handleMouseLeave}
+                            onClick={() => {
+                                dispatch(resetChat());
+                                navigate('/chat', { state: { difficulty: "medium" } });
+                            }}
+                            className="group relative bg-[#22c55e] hover:bg-[#22c55e] text-black font-bold px-8 py-3.5 rounded flex items-center gap-3 transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_40px_rgba(34,197,94,0.6)] overflow-hidden"
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 -translate-x-full group-hover:animate-shimmer"></div>
+                            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.4)_0%,transparent_70%)]"></div>
+                            <Play className="w-5 h-5 relative z-10 fill-black/20" />
+                            <span className="relative z-10 font-mono tracking-tight">{text}</span>
                         </button>
                         <button
                             onClick={() => setShowHowToPlay(!showHowToPlay)}
@@ -265,6 +299,87 @@ export default function Dashboard() {
                                     <div className="w-6 h-6 rounded bg-green-500/20 text-green-400 flex items-center justify-center text-[10px] font-black shrink-0 shadow-[0_0_10px_rgba(34,197,94,0.2)]">03</div>
                                     <p className="text-[10px] text-slate-400 leading-relaxed text-left">Close the deal when the price matches your target for max points.</p>
                                 </div>
+                                <div className="flex gap-4 animate-fade-in" style={{ animationDelay: '2.4s' }}>
+                                    <div className="w-6 h-6 rounded bg-red-500/20 text-red-400 flex items-center justify-center text-[10px] font-black shrink-0 shadow-[0_0_10px_rgba(239,68,68,0.2)]">04</div>
+                                    <p className="text-[10px] text-slate-400 leading-relaxed text-left"><span className="text-red-400 font-bold">HARD MODE:</span> Negotiate under pressure. Max rounds capped at <span className="text-white font-bold">6</span>.</p>
+                                </div>
+                                <div className="flex gap-4 animate-fade-in" style={{ animationDelay: '2.6s' }}>
+                                    <div className="w-6 h-6 rounded bg-yellow-500/20 text-yellow-500 flex items-center justify-center text-[10px] font-black shrink-0 shadow-[0_0_10px_rgba(234,179,8,0.2)]">05</div>
+                                    <p className="text-[10px] text-slate-400 leading-relaxed text-left"><span className="text-yellow-500 font-bold">PROTOCOL ERRORS:</span> If rounds exceed max limits, the synaptic link is severed instantly.</p>
+                                </div>
+                                <div className="flex gap-4 animate-fade-in" style={{ animationDelay: '2.8s' }}>
+                                    <div className="w-6 h-6 rounded bg-orange-500/20 text-orange-400 flex items-center justify-center text-[10px] font-black shrink-0 shadow-[0_0_10px_rgba(249,115,22,0.2)]">06</div>
+                                    <p className="text-[10px] text-slate-400 leading-relaxed text-left"><span className="text-orange-400 font-bold">COGNITIVE THRESHOLD:</span> Frustrating the sentient entity drops patience. Below <span className="text-white font-bold">10%</span> results in link termination.</p>
+                                </div>
+                                <div className="flex gap-4 animate-fade-in" style={{ animationDelay: '3.0s' }}>
+                                    <div className="w-6 h-6 rounded bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-[10px] font-black shrink-0 shadow-[0_0_10px_rgba(34,211,238,0.2)]">07</div>
+                                    <p className="text-[10px] text-slate-400 leading-relaxed text-left"><span className="text-cyan-400 font-bold">TIME ATTACK:</span> 120s sync window. Price leverage decreases as the timer counts down.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {showBluffModal && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <div
+                            className="absolute inset-0 bg-[#060b13]/90 backdrop-blur-md animate-fade-in"
+                            onClick={() => setShowBluffModal(false)}
+                        ></div>
+
+                        <div className="relative w-[500px] max-w-full bg-[#0B111A]/95 backdrop-blur-3xl border border-purple-500/30 rounded-2xl p-8 shadow-[0_25px_60px_rgba(0,0,0,0.9),0_0_40px_rgba(168,85,247,0.15)] animate-fade-in-up flex flex-col text-center">
+                            <button 
+                                onClick={() => setShowBluffModal(false)}
+                                className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors"
+                            >
+                                <span className="text-2xl font-light">×</span>
+                            </button>
+
+                            <div className="flex justify-center mb-6">
+                                <div className="w-16 h-16 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.2)]">
+                                    <VenetianMask className="w-8 h-8 text-purple-500" />
+                                </div>
+                            </div>
+
+                            <h3 className="text-[11px] font-black tracking-[0.3em] text-purple-400 uppercase mb-2">Psychological Warfare</h3>
+                            <h2 className="text-2xl font-bold text-white mb-4">Mastering the Bluff</h2>
+
+                            <div className="text-slate-400 text-sm leading-relaxed mb-8 space-y-4 text-left">
+                                <p>
+                                    In <span className="text-purple-400 font-bold">Bluff Mode</span>, you're not just negotiating prices—you're detecting deception. Our cortex architects will occasionally use false information to gain leverage.
+                                </p>
+                                <div className="bg-slate-900/50 border border-slate-800 rounded-lg p-4 space-y-2">
+                                    <div className="flex gap-3">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-1.5 shrink-0"></div>
+                                        <p className="text-xs italic text-slate-300">"Another agent is offering more right now."</p>
+                                    </div>
+                                    <div className="flex gap-3">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-purple-500 mt-1.5 shrink-0"></div>
+                                        <p className="text-xs italic text-slate-300">"This is the last unit in current stock."</p>
+                                    </div>
+                                </div>
+                                <p className="text-xs font-medium text-slate-500 border-l-2 border-purple-500/30 pl-3">
+                                    Identify if the sentient entity is bluffing or being genuine. One wrong guess severs the cortex sync. How many bluffs can you catch?
+                                </p>
+                            </div>
+
+                            <div className="flex flex-col gap-3">
+                                <button
+                                    onClick={() => {
+                                        setShowBluffModal(false);
+                                        navigate('/bluff');
+                                    }}
+                                    className="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-4 rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_20px_rgba(168,85,247,0.3)] flex items-center justify-center gap-2"
+                                >
+                                    <Play className="w-4 h-4 fill-white/20" />
+                                    PROCEED TO ARENA
+                                </button>
+                                <button
+                                    onClick={() => setShowBluffModal(false)}
+                                    className="text-[10px] font-bold text-slate-500 uppercase tracking-widest hover:text-slate-300 transition-colors py-2"
+                                >
+                                    RETURN TO HUB
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -292,7 +407,10 @@ export default function Dashboard() {
                             </div>
 
                             <button
-                                onClick={() => navigate('/chat', { state: { product: "Normal Terminal", difficulty: "medium" } })}
+                                onClick={() => {
+                                    dispatch(resetChat());
+                                    navigate('/chat', { state: { difficulty: "medium" } });
+                                }}
                                 className="w-full bg-[#131b2c] hover:bg-[#1a243a] text-slate-300 group-hover:text-white border border-slate-800 group-hover:border-green-500/50 py-3 rounded text-sm font-semibold transition-all"
                             >
                                 SELECT MISSION
@@ -312,7 +430,10 @@ export default function Dashboard() {
                             </div>
 
                             <button
-                                onClick={() => navigate('/chat', { state: { product: "Advanced Encryption Core", difficulty: "hard" } })}
+                                onClick={() => {
+                                    dispatch(resetChat());
+                                    navigate('/chat', { state: { difficulty: "hard" } });
+                                }}
                                 className="w-full bg-[#131b2c] hover:bg-[#1a243a] text-slate-300 group-hover:text-white border border-slate-800 group-hover:border-red-500/50 py-3 rounded text-sm font-semibold transition-all"
                             >
                                 SELECT MISSION
@@ -332,7 +453,10 @@ export default function Dashboard() {
                             </div>
 
                             <button
-                                onClick={() => navigate('/chat', { state: { product: "Neural Burst Chip", difficulty: "medium", isTimeAttack: true } })}
+                                onClick={() => {
+                                    dispatch(resetChat());
+                                    navigate('/chat', { state: { difficulty: "medium", isTimeAttack: true } });
+                                }}
                                 className="w-full bg-[#131b2c] hover:bg-[#1a243a] text-slate-300 group-hover:text-white border border-slate-800 group-hover:border-cyan-500/50 py-3 rounded text-sm font-semibold transition-all"
                             >
                                 SELECT MISSION
@@ -352,7 +476,7 @@ export default function Dashboard() {
                             </div>
 
                             <button
-                                onClick={() => navigate('/chat', { state: { product: "Void-Link Processor", difficulty: "expert" } })}
+                                onClick={() => setShowBluffModal(true)}
                                 className="w-full bg-[#131b2c] hover:bg-[#1a243a] text-slate-300 group-hover:text-white border border-slate-800 group-hover:border-purple-500/50 py-3 rounded text-sm font-semibold transition-all"
                             >
                                 SELECT MISSION
@@ -377,11 +501,7 @@ export default function Dashboard() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-800/60">
-                                    {(topRankings.length > 0 ? [...topRankings].sort((a, b) => b.score - a.score) : [
-                                        { rank: 1, name: "Xenon_Striker", score: "42,900" },
-                                        { rank: 2, name: "Cipher_Mind", score: "38,120" },
-                                        { rank: 3, name: "Nego_Queen", score: "35,500" }
-                                    ]).map((row, idx) => {
+                                    {topRankings.length > 0 ? [...topRankings].sort((a, b) => b.score - a.score).slice(0, 5).map((row, idx) => {
                                         const rank = row.rank || idx + 1;
                                         const name = row.name || row.username;
                                         const scoreDisplay = typeof row.score === 'number' ? row.score.toLocaleString() : row.score;
@@ -393,15 +513,21 @@ export default function Dashboard() {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-5 flex items-center gap-3">
-                                                    <div className="w-6 h-6 rounded-full bg-slate-700 overflow-hidden">
-                                                        <img src={`https://ui-avatars.com/api/?name=${name || 'Player'}&background=1e293b&color=fff&size=24`} alt="user" />
+                                                    <div className="w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] ring-1 group-hover:scale-110 transition-transform">
+                                                        <User className="w-4 h-4 text-slate-400 p-1" />
                                                     </div>
                                                     <span className="text-slate-200 font-semibold tracking-wide">{name || 'Player'}</span>
                                                 </td>
                                                 <td className="px-6 py-5 text-right text-green-400 font-bold tracking-wider">{scoreDisplay}</td>
                                             </tr>
                                         )
-                                    })}
+                                    }) : (
+                                        <tr>
+                                            <td colSpan="3" className="px-6 py-10 text-center text-slate-500 italic font-medium tracking-wide">
+                                                No Rankings Yet
+                                            </td>
+                                        </tr>
+                                    )}
                                 </tbody>
                             </table>
                         </div>
@@ -413,27 +539,17 @@ export default function Dashboard() {
                             <h3 className="text-xl font-bold text-white">Live Feed</h3>
                         </div>
                         <div className="bg-[#050B14] border border-slate-800 rounded-xl p-5 font-mono text-[11px] leading-relaxed space-y-4 h-[320px] overflow-y-auto relative custom-scrollbar shadow-[inset_0_4px_20px_rgba(0,0,0,0.5)]">
-                            {liveFeed && liveFeed.length > 0 ? liveFeed.map((event, idx) => (
-                                <div key={idx} className="flex gap-3">
-                                    <span className={`shrink-0 select-none ${event.type === 'error' ? 'text-red-500' : 'text-green-500'}`}>▶</span>
-                                    <div>
-                                        <span className="text-slate-500 mr-2">[{event.timestamp}]</span>
-                                        <span className={event.color || 'text-slate-400'}>{event.message}</span>
-                                    </div>
-                                </div>
-                            )) : (
-                                <div className="space-y-4">
-                                    {dummyFeed.map((l, i) => (
-                                        <div key={l.id} className="flex gap-3 animate-fade-in-up" style={{ animationDelay: `${i * 0.15}s` }}>
-                                            <span className="text-green-500 shrink-0 select-none">▶</span>
-                                            <div>
-                                                <span className="text-slate-500 mr-2">[{l.ts}]</span>
-                                                <span className={l.color}>{l.msg}</span>
-                                            </div>
+                            <div className="space-y-4">
+                                {dummyFeed.map((l, i) => (
+                                    <div key={l.id} className="flex gap-3 animate-fade-in-up" style={{ animationDelay: `${i * 0.15}s` }}>
+                                        <span className="text-green-500 shrink-0 select-none">▶</span>
+                                        <div>
+                                            <span className="text-slate-500 mr-2">[{l.ts}]</span>
+                                            <span className={l.color}>{l.msg}</span>
                                         </div>
-                                    ))}
-                                </div>
-                            )}
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -463,7 +579,7 @@ export default function Dashboard() {
                                 <HelpCircle className="w-7 h-7 text-green-500" />
                             </div>
                             <h4 className="text-lg font-bold text-white mb-3">2. Outsmart the AI</h4>
-                            <p className="text-slate-500 text-sm leading-relaxed">Detect bluffs, use time pressure, and pivot your strategy as the neural network learns you.</p>
+                            <p className="text-slate-500 text-sm leading-relaxed">Detect bluffs, use time pressure, and pivot your strategy as the cortex lattice learns you.</p>
                         </div>
 
                         <div className="flex flex-col items-center text-center group">

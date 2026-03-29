@@ -4,6 +4,7 @@ import {
     setGame,
     addMessage,
     updateGameProgress,
+    setPatience,
     setThinking,
     setLoading,
     setError
@@ -11,7 +12,7 @@ import {
 
 export const useChat = () => {
     const dispatch = useDispatch();
-    const { gameId, round, currentPrice, userPrice } = useSelector(state => state.chat);
+    const { gameId, round, currentPrice } = useSelector(state => state.chat);
 
     const handleStartGame = async (productName, difficulty) => {
         dispatch(setLoading(true));
@@ -20,6 +21,11 @@ export const useChat = () => {
             const response = await startGame(productName, difficulty);
             if (response.success && response.game) {
                 dispatch(setGame(response.game));
+                dispatch(addMessage({
+                    role: 'seller',
+                    message: `MY initial valuation for ${response.game.product} is set at ₹${response.game.startingPrice.toLocaleString()}. What is your opening counter-proposal?`,
+                    offerPrice: response.game.startingPrice
+                }));
             } else {
                 dispatch(setError(response.message || 'Failed to start game'));
             }
@@ -43,8 +49,8 @@ export const useChat = () => {
         try {
             const response = await makeOffer(gameId, offerPrice, message);
             if (response.success) {
-                const { aiOffer, decision } = response;
-
+                const { aiOffer, decision, patience } = response;
+                dispatch(setPatience(patience));
                 dispatch(addMessage({
                     role: 'seller',
                     message: aiOffer.message,

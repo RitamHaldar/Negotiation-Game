@@ -17,9 +17,9 @@ export async function startGame(req, res) {
             success: false
         })
     }
-    const startingPrice = Math.floor(Math.random() * (10000 - 2000 + 1)) + 2000;
-    const targetPrice = Math.floor(startingPrice * 0.7);
-    const minPrice = Math.floor(startingPrice * 0.5);
+    const startingPrice = Math.floor(Math.random() * (50000 - 2000 + 1)) + 2000;
+    const targetPrice = Math.floor(startingPrice * (Math.random() * (0.9 - 0.7) + 0.7));
+    const minPrice = Math.floor(startingPrice * (Math.random() * (0.7 - 0.6) + 0.6));
 
     const game = await gameModel.create({
         user: req.user.id,
@@ -72,7 +72,8 @@ export async function makeOffer(req, res) {
         message: "Offer handled successfully",
         success: true,
         aiOffer,
-        decision: aiResponse.decision
+        decision: aiResponse.decision,
+        patience: aiResponse.patience
     });
 }
 
@@ -85,10 +86,21 @@ export async function makeOffer(req, res) {
 export async function endGame(req, res) {
     try {
         const { gameId, finalPrice } = req.body;
-        if (!gameId) return res.status(400).json({ message: "Game ID is required", success: false });
+        if (!gameId) {
+            return res.status(400).json({
+                message: "Game ID is required",
+                success: false
+            });
+        }
 
         const game = await gameModel.findById(gameId);
-        if (!game) return res.status(404).json({ message: "Active game not found", success: false });
+        if (!game) {
+            return res.status(404).json({
+                message: "Active game not found",
+                success: false
+            });
+        }
+
 
         let score = 0;
         let resultFinalPrice = finalPrice;
@@ -104,15 +116,20 @@ export async function endGame(req, res) {
                 if (user) username = user.username;
             }
 
-            await leaderboardModel.findOneAndUpdate(
-                { user: req.user.id },
-                {
-                    $max: { score: score },
-                    $set: { username: username || "Anonymous" }
-                },
-                { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
-            );
-
+            const record = await leaderboardModel.findOne({ user: req.user.id });
+            if (record) {
+                if (record.score < score) {
+                    record.score = score;
+                    record.username = username || "Anonymous";
+                    await record.save();
+                }
+            } else {
+                await leaderboardModel.create({
+                    user: req.user.id,
+                    score: score,
+                    username: username || "Anonymous"
+                });
+            }
             await userModel.findByIdAndUpdate(req.user.id, { score: score });
         }
 
@@ -125,6 +142,10 @@ export async function endGame(req, res) {
             score: score,
             finalPrice: game.finalPrice
         });
+
+        await offersModel.deleteMany({ game: gameId });
+        await gameModel.findByIdAndDelete(gameId);
+
     } catch (error) {
         console.error("EndGame error:", error);
         res.status(500).json({

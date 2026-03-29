@@ -11,14 +11,35 @@ import {
   Terminal,
   LogOut,
   HelpCircle,
-  CheckCircle2,
-  XCircle,
   Brain,
-  X
+  X,
+  Mic,
+  MicOff
 } from 'lucide-react';
 import { useChat } from '../hooks/useChat';
 import { useAuth } from '../../Auth/hooks/useAuth';
 import { resetChat } from '../chat.slice';
+
+function speak(text, personality = "normal") {
+  window.speechSynthesis.cancel();
+
+  const cleanText = text.replace(/[^a-zA-Z0-9\s.*+-/()!?₹]/g, '');
+
+  const utterance = new SpeechSynthesisUtterance(cleanText);
+  if (personality === "aggressive") {
+    utterance.rate = 1.1;
+    utterance.pitch = 0.8;
+  } else if (personality === "friendly") {
+    utterance.rate = 1;
+    utterance.pitch = 1.3;
+  } else if (personality === "desperate") {
+    utterance.rate = 1.2;
+    utterance.pitch = 1;
+  }
+
+  utterance.volume = 1;
+  window.speechSynthesis.speak(utterance);
+}
 
 export default function Chat() {
   const navigate = useNavigate();
@@ -28,16 +49,20 @@ export default function Chat() {
   const [inputOffer, setInputOffer] = useState("");
   const [inputMessage, setInputMessage] = useState("");
   const [suggestion, setSuggestion] = useState("");
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef(null);
   const [customProduct, setCustomProduct] = useState("");
   const [showInitModal, setShowInitModal] = useState(false);
+  const [showGameOver, setShowGameOver] = useState(false);
   const [timeLeft, setTimeLeft] = useState(120);
   const [isTimeAttackMode, setIsTimeAttackMode] = useState(false);
+  const [isAIVoiceMuted, setIsAIVoiceMuted] = useState(false);
 
   const { handleLogout } = useAuth();
   const {
     gameId, product, startingPrice, targetPrice, currentPrice, userPrice,
     round, patience, status, messages, isThinking, error, score, finalPrice,
-    loading
+    loading, maxRounds
   } = useSelector(state => state.chat);
 
   const { handleStartGame, handleMakeOffer, handleEndGame, fetchSuggestion } = useChat();
@@ -45,10 +70,32 @@ export default function Chat() {
   const stateRef = useRef();
   stateRef.current = { gameId, status, handleEndGame };
 
+  const lastAIMessage = messages && [...messages].reverse().find(m => m.role === 'seller');
+
+  const handleToggleAIVoice = () => {
+    const newMuted = !isAIVoiceMuted;
+    setIsAIVoiceMuted(newMuted);
+
+    if (newMuted) {
+      window.speechSynthesis.cancel();
+    } else if (lastAIMessage) {
+      speak(lastAIMessage.message, "aggressive");
+    }
+  };
+
   useEffect(() => () => {
-    const { gameId, status, handleEndGame } = stateRef.current;
     if (gameId && status === 'active') handleEndGame(0);
+    window.speechSynthesis.cancel();
   }, []);
+
+  useEffect(() => {
+    if (!showInitModal && status === 'active' && messages && messages.length > 0 && !isAIVoiceMuted) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.role === 'seller') {
+        speak(lastMessage.message, "aggressive");
+      }
+    }
+  }, [messages.length, showInitModal, status, isAIVoiceMuted]);
 
   useEffect(() => {
     if (status !== 'active' || !isTimeAttackMode) return;
@@ -76,6 +123,26 @@ export default function Chat() {
   }, []);
 
   useEffect(() => {
+    if (gameId && (status === 'accepted' || status === 'rejected' || status === 'completed')) {
+      setShowGameOver(true);
+    }
+  }, [gameId, status]);
+
+  useEffect(() => {
+    if (status === 'active' && patience < 10) {
+      handleEndGame(0);
+      setShowGameOver(true);
+    }
+  }, [patience, status, handleEndGame]);
+
+  useEffect(() => {
+    if (status === 'active' && round > maxRounds) {
+      handleEndGame(0);
+      setShowGameOver(true);
+    }
+  }, [round, maxRounds, status, handleEndGame]);
+
+  useEffect(() => {
     if (!gameId && status === 'idle' && !showInitModal && !loading) {
       const selectedProduct = location.state?.product;
       const timeAttackFlag = location.state?.isTimeAttack || false;
@@ -94,7 +161,41 @@ export default function Chat() {
   const onStartWithProduct = () => {
     if (!customProduct.trim()) return;
     setShowInitModal(false);
-    handleStartGame(customProduct, "medium");
+    const selectedDifficulty = location.state?.difficulty || "medium";
+    handleStartGame(customProduct, selectedDifficulty);
+  };
+
+  const toggleListening = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Voice recognition not supported in this browser.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
+    recognition.lang = 'en-US';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onstart = () => setIsListening(true);
+    recognition.onend = () => setIsListening(false);
+    recognition.onerror = (event) => {
+      console.error("Speech Recognition Error:", event.error);
+      setIsListening(false);
+    };
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setInputMessage(prev => prev ? `${prev} ${transcript}` : transcript);
+    };
+
+    recognition.start();
   };
 
   const onSendOffer = async () => {
@@ -114,6 +215,7 @@ export default function Chat() {
 
   const onSettle = async () => {
     if (window.confirm(`Are you sure you want to settle at ₹${currentPrice.toLocaleString()}?`)) {
+      window.speechSynthesis.cancel();
       await handleEndGame(currentPrice);
     }
   };
@@ -150,22 +252,23 @@ export default function Chat() {
           <div className="flex items-center gap-6">
             <button
               onClick={() => {
+                window.speechSynthesis.cancel();
                 if (status === 'active') handleEndGame(0);
-                navigate('/');
+                setShowGameOver(true);
               }}
               className="flex items-center gap-3 text-[10px] font-bold text-slate-400 hover:text-white tracking-[0.2em] uppercase transition-colors group"
             >
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Exit Arena
             </button>
             <div className="text-sm font-black italic tracking-widest text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)] uppercase border-l border-slate-700 pl-6 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-              {product || 'Neural Link V4'}
+              {product || 'Synaptic Uplink V4'}
             </div>
           </div>
 
           <div className="hidden md:flex bg-[#111824] border border-slate-800 rounded px-6 py-2 gap-8 shadow-[inset_0_2px_10px_rgba(0,0,0,0.5)] animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
             <div className="flex flex-col items-center justify-center">
               <span className="text-[9px] text-slate-500 font-bold tracking-[0.2em] uppercase">Round</span>
-              <span className="text-white font-bold text-sm tracking-wider">{round}</span>
+              <span className="text-white font-bold text-sm tracking-wider">{round}/{maxRounds}</span>
             </div>
             {isTimeAttackMode ? (
               <div className={`flex items-center gap-3 ${timeLeft <= 30 ? 'animate-pulse' : ''}`}>
@@ -187,14 +290,16 @@ export default function Chat() {
               <span className="text-[9px] text-slate-500 font-bold tracking-[0.2em] uppercase">AI Price</span>
               <span className="text-cyan-400 font-black text-xl tracking-wider">₹{currentPrice.toLocaleString()}</span>
             </div>
-            <div className={`border ${error ? 'border-red-500 bg-red-950/20' : 'border-cyan-500/50 bg-cyan-900/40'} text-cyan-400 text-[10px] font-bold tracking-[0.2em] uppercase px-4 py-1.5 rounded relative overflow-hidden`}>
-              <div className={`absolute top-0 left-0 w-full h-full ${isThinking || error ? 'bg-red-400/10 animate-pulse' : 'bg-cyan-400/20'}`}></div>
-              {error ? 'System Error' : (isThinking ? 'Thinking' : (status === 'active' ? 'Negotiating' : status.toUpperCase()))}
+            <div className={`border ${isThinking ? 'border-amber-500 bg-amber-950/20' : 'border-cyan-500/50 bg-cyan-900/40'} text-cyan-400 text-[10px] font-bold tracking-[0.2em] uppercase px-4 py-1.5 rounded relative overflow-hidden`}>
+              <div className={`absolute top-0 left-0 w-full h-full ${isThinking ? 'bg-amber-400/10 animate-pulse' : 'bg-cyan-400/20'}`}></div>
+              {isThinking ? 'Thinking' : (status === 'active' ? 'Negotiating' : status.toUpperCase())}
             </div>
 
             <button
               onClick={async () => {
+                window.speechSynthesis.cancel();
                 if (status === 'active') await handleEndGame(0);
+                dispatch(resetChat());
                 await handleLogout();
                 navigate('/login');
               }}
@@ -213,29 +318,51 @@ export default function Chat() {
             <div className="bg-[#0B111A] border border-slate-800 rounded-xl p-6 shadow-lg relative overflow-hidden shrink-0 group">
               <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-purple-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
 
-              <div className="relative mx-auto w-32 h-32 mb-5 cursor-pointer">
+              <div className="relative mx-auto w-32 h-32 mb-5 group/avatar">
                 <div className="absolute inset-[-4px] border border-dashed border-purple-500/40 rounded-xl rotate-[10deg] group-hover:rotate-0 transition-all duration-700 ease-in-out"></div>
                 <div className="absolute inset-0 bg-slate-900 rounded-xl overflow-hidden shadow-[0_0_30px_rgba(168,85,247,0.2)]">
                   <img src="/trader.webp" alt="SmartTrader AI" className="w-full h-full object-cover mix-blend-lighten opacity-80" />
                 </div>
+                <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-purple-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
                 <div className="absolute bottom-1 right-1 w-3.5 h-3.5 bg-cyan-400 rounded-full border-[3px] border-[#0B111A] shadow-[0_0_10px_rgba(34,211,238,0.8)] animate-pulse"></div>
               </div>
 
               <div className="text-center mb-6">
-                <h2 className="text-xl font-bold text-white tracking-wide mb-2">SmartTrader AI</h2>
+                <h2 className="text-xl font-bold text-white tracking-wide mb-2">Smart-Seller AI</h2>
                 <span className="inline-block bg-[#2D161F] border border-red-900/50 text-[#FF4455] text-[9px] font-bold tracking-[0.2em] px-4 py-1 rounded-full uppercase">Aggressive</span>
               </div>
 
-              <div className="mb-6">
+              <div className="mb-8">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-[9px] text-slate-500 font-bold tracking-[0.2em] uppercase">Patience Level</span>
                   <span className="text-purple-400 font-bold text-xs tracking-wider">{patience}%</span>
                 </div>
-                <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden shadow-inner">
+                <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden shadow-inner mb-6">
                   <div className="h-full bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.8)] relative transition-all duration-500" style={{ width: `${patience}%` }}>
                     <div className="absolute right-0 top-0 bottom-0 w-4 bg-white/30"></div>
                   </div>
                 </div>
+
+                <button
+                  onClick={handleToggleAIVoice}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all duration-300 group/voice ${isAIVoiceMuted
+                      ? 'border-slate-800/60 bg-slate-900/40 text-slate-500 hover:border-slate-700'
+                      : 'border-purple-500/40 bg-purple-500/5 text-purple-400 shadow-[0_0_20px_rgba(168,85,247,0.05)] hover:border-purple-500/60'
+                    }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2 rounded-lg ${isAIVoiceMuted ? 'bg-slate-800/80 text-slate-600' : 'bg-purple-500/20 text-purple-400'} transition-colors`}>
+                      {isAIVoiceMuted ? <MicOff className="w-4 h-4" /> : <Mic className={`w-4 h-4 ${window.speechSynthesis.speaking ? 'animate-bounce' : ''}`} />}
+                    </div>
+                    <div className="text-left">
+                      <div className="text-[8px] font-black tracking-[0.2em] uppercase opacity-50">Vocal Output</div>
+                      <div className="text-[11px] font-black uppercase tracking-wider">
+                        {isAIVoiceMuted ? 'Sync Offline' : 'Active Link'}
+                      </div>
+                    </div>
+                  </div>
+                  <div className={`w-1.5 h-1.5 rounded-full ${isAIVoiceMuted ? 'bg-slate-700' : 'bg-purple-500 animate-pulse'}`}></div>
+                </button>
               </div>
 
               <div className="flex justify-between border-t border-slate-800/80 pt-4">
@@ -256,7 +383,7 @@ export default function Chat() {
                   <div className={`${m.role === 'user' ? 'bg-[#0A1929]/80 border-r-[3px] border-cyan-400 rounded-l-xl rounded-tr-sm text-right' : 'bg-[#171124] border-l-[3px] border-purple-500 rounded-r-xl rounded-tl-sm text-left'} backdrop-blur-sm p-5 max-w-[85%] shadow-[0_4px_20px_rgba(0,0,0,0.08)] text-sm leading-relaxed relative xl:max-w-[70%] font-medium tracking-wide`}>
                     <div className={`absolute top-0 ${m.role === 'user' ? 'right-[-3px] bg-cyan-300 shadow-[0_0_10px_rgba(34,211,238,1)]' : 'left-[-3px] bg-purple-400 shadow-[0_0_10px_rgba(168,85,247,1)]'} w-[3px] h-[60%]`}></div>
                     <div className="mb-2 text-[10px] uppercase font-bold tracking-widest opacity-50">
-                      {m.role === 'user' ? 'You' : 'Seller'} {m.offerPrice ? `// ₹${m.offerPrice.toLocaleString()}` : ''}
+                      {m.role === 'user' ? 'You' : 'Seller'} {m.offerPrice ? `// ₹${m.offerPrice}` : ''}
                     </div>
                     <span className={m.role === 'user' ? 'text-cyan-50' : 'text-slate-300'}>
                       {m.message}
@@ -301,6 +428,17 @@ export default function Chat() {
                         placeholder={status === 'active' ? "TYPE YOUR TACTICAL MESSAGE..." : "NEGOTIATION CONCLUDED"}
                         className="flex-1 bg-[#050A11] px-6 outline-none text-white text-[13px] tracking-[0.1em] placeholder:text-slate-600 font-mono disabled:opacity-50"
                       />
+                      <button
+                        onClick={toggleListening}
+                        disabled={status !== 'active' || isThinking}
+                        className={`px-4 bg-[#0a0f18] border-l border-slate-800 transition-colors ${isListening ? 'text-red-500' : 'text-slate-500 hover:text-cyan-400'} disabled:opacity-50`}
+                      >
+                        {isListening ? (
+                          <MicOff className="w-5 h-5 animate-pulse" />
+                        ) : (
+                          <Mic className="w-5 h-5" />
+                        )}
+                      </button>
                     </div>
                     <div className="w-[180px] flex h-14 shadow-inner rounded-lg overflow-hidden border border-slate-800 focus-within:border-cyan-500/50 transition-colors">
                       <div className="flex items-center px-4 bg-[#0a0f18] text-slate-500 text-xs font-mono font-bold border-r border-slate-800">₹</div>
@@ -340,20 +478,20 @@ export default function Chat() {
                   <div className="absolute bottom-0 inset-x-0 h-[40%] bg-cyan-900/40"></div>
                 </div>
 
-                <div className="absolute top-0 right-0 text-right">
+                <div className="absolute top-0 left-0 text-left">
                   <div className="text-[8px] text-slate-500 font-bold tracking-widest uppercase mb-1">Starting</div>
                   <div className="text-[#FF4455] font-black text-sm">₹{startingPrice.toLocaleString()}</div>
                 </div>
 
-                <div className="absolute bottom-0 right-0 text-right">
+                <div className="absolute bottom-0 left-0 text-left">
                   <div className="text-[8px] text-slate-500 font-bold tracking-widest uppercase mb-1">Target</div>
                   <div className="text-cyan-400 font-black text-sm">₹{targetPrice.toLocaleString()}</div>
                 </div>
 
-                <div className="absolute left-1/2 -track-x-1/2 flex items-center z-20 w-[140%] -ml-[15%] transition-all duration-1000" style={{ top: `${Math.max(5, Math.min(95, 100 - ((userPrice - targetPrice) / (startingPrice - targetPrice || 1) * 100)))}%` }}>
-                  <div className="mx-auto flex items-center justify-end w-full pr-[50%] flex-row-reverse">
-                    <div className="w-3.5 h-3.5 bg-cyan-400 rotate-45 border-[2px] border-white shadow-[0_0_20px_rgba(34,211,238,0.8)] z-20 shrink-0 relative right-1"></div>
-                    <div className="bg-[#051118] border-[1.5px] border-cyan-400 px-3 py-1.5 rounded text-white font-black tracking-wider text-[10px] shadow-[0_0_20px_rgba(34,211,238,0.3)] z-10 shrink-0 bg-opacity-95 backdrop-blur">
+                <div className="absolute inset-x-0 flex items-center z-20 transition-all duration-1000 px-4" style={{ top: `${Math.max(5, Math.min(95, 100 - ((userPrice - targetPrice) / (startingPrice - targetPrice || 1) * 100)))}%` }}>
+                  <div className="relative w-full flex items-center justify-center">
+                    <div className="w-3.5 h-3.5 bg-cyan-400 rotate-45 border-[2px] border-white shadow-[0_0_20px_rgba(34,211,238,0.8)] z-20 shrink-0"></div>
+                    <div className="absolute left-[calc(50%+12px)] bg-[#051118] border-[1.5px] border-cyan-400 px-3 py-1.5 rounded text-white font-black tracking-wider text-[10px] shadow-[0_0_20px_rgba(34,211,238,0.3)] z-10 shrink-0 bg-opacity-95 backdrop-blur whitespace-nowrap">
                       YOU: ₹{userPrice.toLocaleString()}
                     </div>
                   </div>
@@ -387,8 +525,9 @@ export default function Chat() {
 
           <button
             onClick={() => {
+              window.speechSynthesis.cancel();
               if (status === 'active') handleEndGame(0);
-              navigate('/');
+              setShowGameOver(true);
             }}
             className="group relative flex flex-col items-center justify-center gap-1.5 px-8 min-w-[120px] hover:bg-red-500/10 transition-all"
           >
@@ -407,40 +546,99 @@ export default function Chat() {
             </button>
             <div className="flex items-center gap-2 mb-3">
               <Brain className="w-4 h-4 text-purple-400" />
-              <span className="text-[10px] font-bold text-purple-400 tracking-widest uppercase">Neural Advisor</span>
+              <span className="text-[10px] font-bold text-purple-400 tracking-widest uppercase">Cortex Advisor</span>
             </div>
             <p className="text-xs text-white leading-relaxed italic pr-4">"{suggestion}"</p>
           </div>
         )}
 
-        {(status === 'completed' || status === 'accepted' || status === 'rejected') && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
-            <div className="absolute inset-0 bg-[#060B13]/90 backdrop-blur-md animate-fade-in"></div>
-            <div className="relative bg-[#0B111A] border border-slate-800 rounded-2xl p-10 max-w-md w-full text-center shadow-2xl animate-fade-in-up">
-              <div className="mb-6 flex justify-center">
-                {status === 'rejected' ? (
-                  <XCircle className="w-16 h-16 text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]" />
+        {showGameOver && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-[#060B13]/80 backdrop-blur-2xl animate-fade-in overflow-hidden">
+            <div className="absolute inset-0 pointer-events-none opacity-20 overflow-hidden">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(34,211,238,0.1),transparent_70%)]"></div>
+              <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/graphy.png')] opacity-10"></div>
+            </div>
+
+            <button
+              onClick={() => {
+                setShowGameOver(false);
+                navigate('/');
+              }}
+              className="absolute top-8 right-8 w-12 h-12 rounded-full border border-slate-700/50 flex items-center justify-center text-slate-400 hover:text-white hover:border-white transition-all hover:rotate-90 z-[110] bg-slate-900/50 backdrop-blur-md group"
+            >
+              <X className="w-6 h-6 group-hover:scale-110 transition-transform" />
+            </button>
+
+            <div className="relative w-full max-w-2xl flex flex-col items-center text-center">
+              <div className="mb-12 relative">
+                <div className="absolute -inset-10 bg-cyan-500/10 blur-[60px] rounded-full animate-pulse"></div>
+                {(status === 'accepted' || status === 'completed') ? (
+                  <div className="relative animate-glitch-text">
+                    <h2 className="text-6xl md:text-8xl font-black text-green-500 tracking-[0.2em] uppercase drop-shadow-[0_0_30px_rgba(34,197,94,0.4)]">MISSION<br />COMPLETE</h2>
+                    <p className="mt-4 text-[10px] font-bold tracking-[0.5em] text-green-400/60 uppercase">Synaptic Connection Stabilized</p>
+                  </div>
                 ) : (
-                  <CheckCircle2 className="w-16 h-16 text-green-500 drop-shadow-[0_0_15px_rgba(34,197,94,0.5)]" />
+                  <div className="relative animate-glitch-text">
+                    <h2 className="text-6xl md:text-8xl font-black text-red-500 tracking-[0.2em] uppercase drop-shadow-[0_0_30px_rgba(239,68,68,0.4)]">LINK<br />SEVERED</h2>
+                    <p className="mt-4 text-[10px] font-bold tracking-[0.5em] text-red-400/60 uppercase">Synaptic Connection Terminated</p>
+                  </div>
                 )}
               </div>
-              <h2 className="text-3xl font-black text-white tracking-widest uppercase mb-2">
-                {status === 'rejected' ? 'Negotiation Failed' : 'Contract Secured'}
-              </h2>
-              <p className="text-slate-500 text-xs font-bold tracking-[0.3em] uppercase mb-8">
-                Final Price: ₹{finalPrice?.toLocaleString() || currentPrice.toLocaleString()}
-              </p>
 
-              <div className="bg-[#050A11] border border-slate-800 rounded-xl p-6 mb-8">
-                <span className="block text-[10px] text-slate-500 font-bold tracking-widest uppercase mb-1">Arena Score</span>
-                <span className="text-4xl font-black text-white tracking-widest">{score || 0}</span>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mb-12 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+                <div className="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6 backdrop-blur-md relative group overflow-hidden">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-cyan-500 opacity-50"></div>
+                  <span className="block text-[8px] text-slate-500 font-bold tracking-[0.3em] uppercase mb-2">Final Price</span>
+                  <span className="text-2xl font-black text-white tracking-widest">₹{(finalPrice || currentPrice).toLocaleString()}</span>
+                </div>
+                <div className="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6 backdrop-blur-md relative group overflow-hidden">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-purple-500 opacity-50"></div>
+                  <span className="block text-[8px] text-slate-500 font-bold tracking-[0.3em] uppercase mb-2">Arena Score</span>
+                  <span className="text-2xl font-black text-white tracking-widest">{score || 0}</span>
+                </div>
+                <div className="bg-slate-900/40 border border-slate-800/60 rounded-2xl p-6 backdrop-blur-md relative group overflow-hidden">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-yellow-500 opacity-50"></div>
+                  <span className="block text-[8px] text-slate-500 font-bold tracking-[0.3em] uppercase mb-2">Total Rounds</span>
+                  <span className="text-2xl font-black text-white tracking-widest">{round}</span>
+                </div>
               </div>
 
-              <div className="flex gap-4">
-                <button onClick={handleNewRun} className="flex-1 bg-cyan-400 hover:bg-cyan-300 text-[#060B13] font-black tracking-widest uppercase py-4 rounded text-xs transition-all">New Run</button>
-                <button onClick={() => navigate('/')} className="flex-1 border border-slate-700 hover:border-slate-500 text-white font-black tracking-widest uppercase py-4 rounded text-xs transition-all">Terminal Home</button>
+              <div className="flex flex-col sm:flex-row gap-4 w-full animate-fade-in-up" style={{ animationDelay: '0.6s' }}>
+                <button
+                  onClick={() => {
+                    handleNewRun();
+                    setShowGameOver(false);
+                  }}
+                  className="flex-1 bg-cyan-500 hover:bg-cyan-400 text-black font-black tracking-[0.2em] uppercase py-5 rounded-xl text-xs transition-all hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_30px_rgba(34,211,238,0.2)]"
+                >
+                  New Mission
+                </button>
+                <button
+                  onClick={() => {
+                    setShowGameOver(false);
+                    window.speechSynthesis.cancel();
+                    dispatch(resetChat());
+                    navigate('/');
+                  }}
+                  className="flex-1 border border-slate-700 hover:border-white text-white font-black tracking-[0.2em] uppercase py-5 rounded-xl text-xs transition-all hover:scale-[1.02] active:scale-[0.98] backdrop-blur-md"
+                >
+                  Return to Terminal
+                </button>
               </div>
             </div>
+
+            <style jsx>{`
+              .animate-glitch-text {
+                animation: glitch 3s infinite;
+              }
+              @keyframes glitch {
+                0% { transform: translate(0); text-shadow: none; }
+                2% { transform: translate(-2px, 1px); text-shadow: 1px 0 #0ff, -1px 0 #f0f; }
+                4% { transform: translate(2px, -1px); text-shadow: -1px 0 #0ff, 1px 0 #f0f; }
+                6% { transform: translate(0); text-shadow: none; }
+                100% { transform: translate(0); text-shadow: none; }
+              }
+            `}</style>
           </div>
         )}
 
@@ -448,6 +646,13 @@ export default function Chat() {
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
             <div className="absolute inset-0 bg-[#060B13]/90 backdrop-blur-md animate-fade-in"></div>
             <div className="relative bg-[#0B111A] border border-cyan-500/30 rounded-2xl p-8 max-w-md w-full shadow-[0_0_50px_rgba(34,211,238,0.15)] animate-fade-in-up">
+              <button
+                onClick={() => navigate('/')}
+                className="absolute top-4 right-4 p-2 text-slate-500 hover:text-white transition-colors group"
+                title="Return to Dashboard"
+              >
+                <X className="w-5 h-5 group-hover:scale-110 transition-transform" />
+              </button>
               <div className="mb-8">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="p-2 bg-cyan-500/10 rounded-lg border border-cyan-500/20">
@@ -482,7 +687,7 @@ export default function Chat() {
                   className="w-full relative group overflow-hidden bg-cyan-400 hover:bg-cyan-300 text-[#060B13] font-black tracking-[0.2em] uppercase py-4 rounded-xl text-xs transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   <div className="absolute inset-0 bg-white/20 -translate-x-[120%] skew-x-[-20deg] group-hover:animate-[slide_0.6s_ease-out]"></div>
-                  ESTABLISH CONNECTION
+                  ESTABLISH UPLINK
                 </button>
               </div>
             </div>

@@ -183,7 +183,7 @@ export default function Leaderboard() {
                                     <thead className="text-[9px] text-slate-500 font-bold tracking-[0.25em] uppercase border-b border-slate-800">
                                         <tr>
                                             <th className="px-8 py-6">Rank</th>
-                                            <th className="px-8 py-6">Striker Entity</th>
+                                            <th className="px-8 py-6">Synaptic Prospect</th>
                                             <th className="px-8 py-6 text-right">Total Score</th>
                                         </tr>
                                     </thead>
@@ -212,20 +212,6 @@ export default function Leaderboard() {
                         </div>
                     </div>
                 </div>
-
-                <footer className="mt-auto border-t border-slate-800/60 bg-[#0A0D14] py-8 relative z-10 shrink-0">
-                    <div className="max-w-[1400px] mx-auto px-8 flex flex-col md:flex-row items-center justify-between gap-6">
-                        <div className="flex items-center gap-8">
-                            <div className="text-white font-black tracking-widest drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]">STRIKER_CORE</div>
-                        </div>
-
-                        <div className="flex flex-col items-end gap-1.5">
-                            <div className="text-[8px] text-slate-500 tracking-[0.2em] font-bold uppercase">
-                                © 2024 Kinetic Command Deck // All Rights Reserved
-                            </div>
-                        </div>
-                    </div>
-                </footer>
             </div>
         </div>
     );
