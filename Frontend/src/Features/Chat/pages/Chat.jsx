@@ -498,7 +498,7 @@ export default function Chat() {
                         <div className="flex-1 flex h-14 shadow-inner rounded-lg overflow-hidden border border-slate-800 focus-within:border-cyan-500/50 transition-colors">
                         <div className="flex items-center px-3 sm:px-4 bg-[#0a0f18] text-slate-500 text-[10px] sm:text-xs font-mono font-bold border-r border-slate-800">₹</div>
                         <input
-                            type="number"
+                            type="text"
                             disabled={status !== 'active' || isThinking}
                             value={inputOffer}
                             onChange={(e) => setInputOffer(e.target.value)}

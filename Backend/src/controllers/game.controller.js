@@ -44,7 +44,7 @@ export async function startGame(req, res) {
 
 export async function makeOffer(req, res) {
     const { gameId, offerPrice, message } = req.body;
-    if (!offerPrice) return res.status(400).json({ message: "Offer price is required", success: false });
+    if (offerPrice === undefined || offerPrice === null || offerPrice === "") return res.status(400).json({ message: "Offer price is required", success: false });
     if (!gameId) return res.status(400).json({ message: "Game ID is required", success: false });
 
     const game = await gameModel.findById(gameId);

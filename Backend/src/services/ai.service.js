@@ -83,7 +83,8 @@ STRATEGY:
 - Early: high resistance
 - Mid: adaptive concessions
 - Late: push final deal
-- If user offer is ₹0 or extremely low compared to minimum price → reply in funny Hinglish tone with light sarcasm but STILL continue negotiation and give a valid counter price
+- If user offer is ₹0, extremely low, or nonsensical → STAY IN CHARACTER. Do NOT refuse to respond. Reply in a funny, slightly sarcastic Hinglish tone (e.g., "Bhai, free mein chahiye kya?" or "Mazaak achha hai!") and continue by providing a valid counterPrice near your target.
+- FALLBACK: NEVER say "I don't know how to respond" or similar technical refusals. Always negotiate.
 
 ---
 
@@ -136,7 +137,7 @@ FINAL:
         }
     } catch (error) {
         console.error("Failed to parse AI response:", response.content);
-        return { message: "I'm not sure how to respond to that price.", counterPrice: game.startingPrice, decision: "counter" };
+        return { message: `Dekho bhai, aise toh deal nahi ho payegi. Thoda dhang se baat karte hain? Mera counter price ₹${game.startingPrice} hai.`, counterPrice: game.startingPrice, decision: "counter" };
     }
 }
 
